@@ -75,8 +75,11 @@ pip install requirements.txt
 
 # Documentation 
 YDB - https://ydb.tech/ru/docs/
+
 MongoDB - https://www.mongodb.com/docs/
+
 pydantic - https://docs.pydantic.dev/latest/
+
 aiogram - https://aiogram.readthedocs.io/_/downloads/en/latest/pdf/
 
 
