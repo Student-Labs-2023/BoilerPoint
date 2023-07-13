@@ -1,0 +1,6 @@
+aiogram
+python-dotenv
+ydb
+boto3
+sqlite3
+pymongo
