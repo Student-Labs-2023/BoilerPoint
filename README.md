@@ -1,4 +1,4 @@
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/af1378cd-975c-4f63-bcc8-6fd95688528f)# BoilerPoint
+# BoilerPoint
 
 
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/6a43322d-326c-4fd4-aeb3-55b56d6bedb0)
@@ -62,6 +62,11 @@ pip install requirements.txt
 
 
 Скопируйте ключи и поместите Public в своём .env в параметр AWS_PUBLIC_KEY (он короче) , а Private в AWS_SECRET_KEY (он длиннее)
+
+
+Теперь перейдите в @BotFather в телеграм и получите токен для вашего бота :
+
+- Поместите токен в .env файл с параметром TOKEN 
 
 
 
