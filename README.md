@@ -73,6 +73,13 @@ pip install requirements.txt
 Теперь переместите свои .env файлы в корневую директорию проекта , а также в Database
 
 
+# Documentation 
+YDB - https://ydb.tech/ru/docs/
+MongoDB - https://www.mongodb.com/docs/
+pydantic - https://docs.pydantic.dev/latest/
+aiogram - https://aiogram.readthedocs.io/_/downloads/en/latest/pdf/
+
+
 
 # Запуск бота 
 
