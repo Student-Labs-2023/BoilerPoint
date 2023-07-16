@@ -11,7 +11,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from buttons import ikbg, rkbm
 from pydantic import BaseModel, Field, ValidationError, validator
 from validator import ValidatedUserRegistrationDTO
-from Database.DataUsers import supabase, get_user_state_by_id, update_user_state
+from Database.DataUsers import get_user_state_by_id, update_user_state, supabase
 from uud import generate_uuid_from_chat_id
 
 load_dotenv()
@@ -211,13 +211,16 @@ async def handle_rating(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка рейтинг")
+    update_user_state(chat_id, str(MenuStates.rating))
     await MenuStates.waiting_for_profile.set()
+
 
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка календарь")
+    update_user_state(chat_id, str(MenuStates.calendar))
     await MenuStates.waiting_for_profile.set()
 
 @dp.message_handler(state=MenuStates.help)
@@ -225,6 +228,7 @@ async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка помощь")
+    update_user_state(chat_id, str(MenuStates.help))
     await MenuStates.waiting_for_profile.set()
 
 @dp.message_handler(state=MenuStates.tasks)
@@ -232,6 +236,7 @@ async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка задания")
+    update_user_state(chat_id, str(MenuStates.tasks))
     await MenuStates.waiting_for_profile.set()
 
 
