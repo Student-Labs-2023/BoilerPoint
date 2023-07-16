@@ -190,16 +190,16 @@ async def handle_profile(message: types.Message, state: FSMContext):
             balance = user_data.get('balance', 0)
             if gender:
                 gender = "🙋‍♂️"
-                image = "male.png"
+                image = os.environ.get("MALE")
             else:
                 gender = "🙋‍♀️"
-                image = "female.png"
+                image = os.environ.get("MALE")
             # Формирование сообщения профиля пользователя
             profile_message = f"Добро пожаловать в ваш профиль:\n\n" \
                               f"{gender}{pseudo}, {age} лет\n└Ваше место в топе: ?\n\n" \
                               f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
 
-            await bot.send_photo(chat_id=chat_id, photo=open(image, 'rb'), caption=profile_message)
+            await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message)
         else:
             await bot.send_message(chat_id, "Профиль не найден.")
     else:
