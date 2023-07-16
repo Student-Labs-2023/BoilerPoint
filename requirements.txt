@@ -1,6 +1,6 @@
 aiogram
 python-dotenv
-ydb
+ydb 
 boto3
-sqlite3
+pydantic
 pymongo

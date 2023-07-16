@@ -2,8 +2,8 @@ from aiogram.types import InlineKeyboardMarkup,InlineKeyboardButton, ReplyKeyboa
 #gender buttons
 
 ikbg = InlineKeyboardMarkup(row_width=2)
-ibm = InlineKeyboardButton(text="Мужчина",callback_data='Male')
-ibf = InlineKeyboardButton(text="Женщина",callback_data='Female')
+ibm = InlineKeyboardButton(text="Мужчина",callback_data='1')
+ibf = InlineKeyboardButton(text="Женщина",callback_data='0')
 ikbg.add(ibm,ibf)
 
 #menu buttons
