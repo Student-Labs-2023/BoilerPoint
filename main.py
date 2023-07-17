@@ -9,10 +9,10 @@ from typing import Optional
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from buttons import ikbg, rkbm
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import ValidationError
 from validator import ValidatedUserRegistrationDTO
-from Database.DataUsers import get_user_state_by_id, update_user_state, supabase
-from uud import generate_uuid_from_chat_id
+from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id
+
 
 load_dotenv()
 
@@ -65,7 +65,7 @@ async def start_command(message: types.Message, state: FSMContext):
         # Установка состояния "waiting_for_age" для пользователя
         await RegistrationStates.waiting_for_age.set()
         # Сохранение состояния пользователя
-        update_user_state(chat_id, str(RegistrationStates.waiting_for_age))
+        update_user_state_by_id(chat_id, str(RegistrationStates.waiting_for_age))
 
 @dp.message_handler(state=RegistrationStates.waiting_for_age)
 async def handle_age(message: types.Message, state: FSMContext):
@@ -91,7 +91,7 @@ async def handle_age(message: types.Message, state: FSMContext):
     # Переход к следующему состоянию "waiting_for_gender"
     await RegistrationStates.waiting_for_gender.set()
     # Сохранение состояния пользователя
-    update_user_state(chat_id, str(RegistrationStates.waiting_for_gender))
+    update_user_state_by_id(chat_id, str(RegistrationStates.waiting_for_gender))
 
 @dp.callback_query_handler(state=RegistrationStates.waiting_for_gender)
 async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
@@ -110,7 +110,7 @@ async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
     await RegistrationStates.waiting_for_name.set()
 
     # Сохранение состояния пользователя
-    update_user_state(chat_id, str(RegistrationStates.waiting_for_name))
+    update_user_state_by_id(chat_id, str(RegistrationStates.waiting_for_name))
 
 @dp.message_handler(state=RegistrationStates.waiting_for_name)
 async def handle_name(message: types.Message, state: FSMContext):
@@ -140,7 +140,7 @@ async def handle_name(message: types.Message, state: FSMContext):
         print(f"Ошибка при обновлении данных пользователя {chat_id}: {e}")
 
     # Обновление состояния пользователя в базе данных
-    update_user_state(chat_id, str(RegistrationStates.final_reg))
+    update_user_state_by_id(chat_id, str(RegistrationStates.final_reg))
 
     # Отправка сообщения о успешной регистрации
     await bot.send_message(chat_id, f"Регистрация успешно завершена, {dto.name}!", reply_markup=rkbm)
@@ -179,7 +179,7 @@ async def handle_profile(message: types.Message, state: FSMContext):
     select = message.text
     if select == "👤Профиль":
         # Запрос данных пользователя из базы данных Supabase
-        response = supabase.table('UsersData').select('full_name','gender','age','balance').eq('chat_id', chat_id).execute()
+        response = get_user_info_by_id(chat_id)
         print(response)
         items = response.data
         if len(items) > 0:
@@ -211,7 +211,7 @@ async def handle_rating(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка рейтинг")
-    update_user_state(chat_id, str(MenuStates.rating))
+    update_user_state_by_id(chat_id, str(MenuStates.rating))
     await MenuStates.waiting_for_profile.set()
 
 
@@ -220,7 +220,7 @@ async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка календарь")
-    update_user_state(chat_id, str(MenuStates.calendar))
+    update_user_state_by_id(chat_id, str(MenuStates.calendar))
     await MenuStates.waiting_for_profile.set()
 
 @dp.message_handler(state=MenuStates.help)
@@ -228,7 +228,7 @@ async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка помощь")
-    update_user_state(chat_id, str(MenuStates.help))
+    update_user_state_by_id(chat_id, str(MenuStates.help))
     await MenuStates.waiting_for_profile.set()
 
 @dp.message_handler(state=MenuStates.tasks)
@@ -236,7 +236,7 @@ async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     await bot.send_message(chat_id, f"Нажата кнопка задания")
-    update_user_state(chat_id, str(MenuStates.tasks))
+    update_user_state_by_id(chat_id, str(MenuStates.tasks))
     await MenuStates.waiting_for_profile.set()
 
 
@@ -256,5 +256,5 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
 
 
 if __name__ == '__main__':
-    executor.start_polling(dispatcher=dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True)
 
