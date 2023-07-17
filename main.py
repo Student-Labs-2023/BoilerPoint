@@ -9,8 +9,6 @@ from typing import Optional
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from buttons import ikbg, rkbm
-from pydantic import ValidationError
-from validator import ValidatedUserRegistrationDTO
 from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id
 
 
@@ -71,27 +69,28 @@ async def start_command(message: types.Message, state: FSMContext):
 async def handle_age(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     age = message.text
-
     # Проверка и валидация возраста пользователя
     try:
-        validated_age = ValidatedUserRegistrationDTO(chat_id=chat_id, age=age).age
-    except ValidationError as e:
-        error_msg = e.errors()[0]["msg"]
-        await message.reply(error_msg)
-        return
+        age = int(age)
+    except ValueError as e:
+        await bot.send_message(chat_id,"Ваш возраст неккоректен. Возраст не должен содержать буквы!")
+        print(f"Error validation age{e}")
+    if int(age) < 12 or int(age) > 122:
+        await bot.send_message(chat_id,"Ваш возраст неккоректен. Возраст должен лежать в диапазоне от 12 - 122")
+        await RegistrationStates.waiting_for_age.set()
+    else:
+        # Сохранение возраста пользователя в DTO
+        dto = user_registration[chat_id]
+        dto.age = age
+        print(f"Возраст пользователя {chat_id}: {age}")
 
-    # Сохранение возраста пользователя в DTO
-    dto = user_registration[chat_id]
-    dto.age = validated_age
-    print(f"Возраст пользователя {chat_id}: {validated_age}")
+        # Запрашиваем пол пользователя
+        await message.reply("Введите ваш пол (Male/Female):", reply_markup=ikbg)
 
-    # Запрашиваем пол пользователя
-    await message.reply("Введите ваш пол (Male/Female):", reply_markup=ikbg)
-
-    # Переход к следующему состоянию "waiting_for_gender"
-    await RegistrationStates.waiting_for_gender.set()
-    # Сохранение состояния пользователя
-    update_user_state_by_id(chat_id, str(RegistrationStates.waiting_for_gender))
+        # Переход к следующему состоянию "waiting_for_gender"
+        await RegistrationStates.waiting_for_gender.set()
+        # Сохранение состояния пользователя
+        update_user_state_by_id(chat_id, str(RegistrationStates.waiting_for_gender))
 
 @dp.callback_query_handler(state=RegistrationStates.waiting_for_gender)
 async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
@@ -116,43 +115,47 @@ async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
 async def handle_name(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     name = message.text
+    
+    if name.replace(" ", "").isalpha() and len(name) < 40:       
+        # Сохранение имени пользователя в DTO
+        dto = user_registration[chat_id]
+        dto.name = name
+        print(f"Имя пользователя {chat_id}: {name}")
 
-    # Сохранение имени пользователя в DTO
-    dto = user_registration[chat_id]
-    dto.name = name
-    print(f"Имя пользователя {chat_id}: {name}")
+        # Получаем имя пользователя из его профиля в Telegram
+        telegram_name = message.from_user.first_name
 
-    # Получаем имя пользователя из его профиля в Telegram
-    telegram_name = message.from_user.first_name
+        # Обновление данных пользователя в базе данных
+        try:
+            tg_username = '@' + message.from_user.username if message.from_user.username else dto.name
+            response = supabase.table('UsersData').insert([{
+                'full_name': dto.name,
+                'chat_id': chat_id,
+                'age': int(dto.age),
+                'gender': bool(dto.gender),
+                'user_state': str(RegistrationStates.final_reg),
+                'tgusr': '@' + str(message.from_user.username)
+            }]).execute()
+            print(f"Данные пользователя {chat_id} обновлены: {response}")
+        except Exception as e:
+            print(f"Ошибка при обновлении данных пользователя {chat_id}: {e}")
 
-    # Обновление данных пользователя в базе данных
-    try:
-        tg_username = '@' + message.from_user.username if message.from_user.username else dto.name
-        response = supabase.table('UsersData').insert([{
-            'full_name': dto.name,
-            'chat_id': chat_id,
-            'age': int(dto.age),
-            'gender': bool(dto.gender),
-            'user_state': str(RegistrationStates.final_reg),
-            'tgusr': '@' + str(message.from_user.username)
-        }]).execute()
-        print(f"Данные пользователя {chat_id} обновлены: {response}")
-    except Exception as e:
-        print(f"Ошибка при обновлении данных пользователя {chat_id}: {e}")
-
-    # Обновление состояния пользователя в базе данных
-    update_user_state_by_id(chat_id, str(RegistrationStates.final_reg))
-
-    # Отправка сообщения о успешной регистрации
-    if str(message.from_user.username) == 'None':
-        await bot.send_message(chat_id, f"Регистрация успешно завершена с неточностями, {dto.name}!У вас нет имени пользователя Телеграм, связь администрации с вами может быть усложнена, вам необходимо указать в вашем профиле телеграма ваше имя пользователя и перерегистрироваться в боте.", reply_markup=rkbm)
+        # Обновление состояния пользователя в базе данных
+        update_user_state_by_id(chat_id, str(RegistrationStates.final_reg))
+    
+        # Отправка сообщения о успешной регистрации
+        if str(message.from_user.username) == 'None':
+            await bot.send_message(chat_id, f"Регистрация успешно завершена с неточностями, {dto.name}!У вас нет имени пользователя Телеграм, связь администрации с вами может быть усложнена, вам необходимо указать в вашем профиле телеграма ваше имя пользователя и перерегистрироваться в боте.", reply_markup=rkbm)
+        else:
+            await bot.send_message(chat_id, f"Регистрация успешно завершена, {dto.name}!", reply_markup=rkbm)
+        # Удаление данных о регистрации пользователя из словаря user_registration
+        del user_registration[chat_id]
+        print(f"Данные о регистрации пользователя {chat_id} удалены")
+        await state.finish()
+        await MenuStates.profile.set()
     else:
-        await bot.send_message(chat_id, f"Регистрация успешно завершена, {dto.name}!", reply_markup=rkbm)
-    # Удаление данных о регистрации пользователя из словаря user_registration
-    del user_registration[chat_id]
-    print(f"Данные о регистрации пользователя {chat_id} удалены")
-    await state.finish()
-    await MenuStates.profile.set()
+        await bot.send_message(chat_id, f"Пожалуйста, введите корректно свое ФИО")
+        await RegistrationStates.waiting_for_name.set()
 
 @dp.message_handler(state=MenuStates.waiting_for_profile)
 async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
