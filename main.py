@@ -133,7 +133,8 @@ async def handle_name(message: types.Message, state: FSMContext):
             'chat_id': chat_id,
             'age': int(dto.age),
             'gender': bool(dto.gender),
-            'user_state': str(RegistrationStates.final_reg)
+            'user_state': str(RegistrationStates.final_reg),
+            'tgusr': '@' + str(message.from_user.username)
         }]).execute()
         print(f"Данные пользователя {chat_id} обновлены: {response}")
     except Exception as e:
@@ -143,8 +144,10 @@ async def handle_name(message: types.Message, state: FSMContext):
     update_user_state_by_id(chat_id, str(RegistrationStates.final_reg))
 
     # Отправка сообщения о успешной регистрации
-    await bot.send_message(chat_id, f"Регистрация успешно завершена, {dto.name}!", reply_markup=rkbm)
-
+    if str(message.from_user.username) == 'None':
+        await bot.send_message(chat_id, f"Регистрация успешно завершена с неточностями, {dto.name}!У вас нет имени пользователя Телеграм, связь администрации с вами может быть усложнена, вам необходимо указать в вашем профиле телеграма ваше имя пользователя и перерегистрироваться в боте.", reply_markup=rkbm)
+    else:
+        await bot.send_message(chat_id, f"Регистрация успешно завершена, {dto.name}!", reply_markup=rkbm)
     # Удаление данных о регистрации пользователя из словаря user_registration
     del user_registration[chat_id]
     print(f"Данные о регистрации пользователя {chat_id} удалены")
