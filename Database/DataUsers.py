@@ -49,7 +49,7 @@ def delete_user_data_by_id(chat_id: int) -> str:
 
 def get_user_info_by_id(chat_id:int ) -> str:
     try:
-        response = supabase.table('UsersData').select('full_name','gender','age','balance').eq('chat_id', chat_id).execute()
+        response = supabase.table('UsersData').select('full_name','gender','age','balance','tgusr').eq('chat_id', chat_id).execute()
         return response
     except Exception as e:
         print(f"Error get info about user: {chat_id}: {e}")
