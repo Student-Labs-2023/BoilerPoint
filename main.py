@@ -72,6 +72,12 @@ async def admin_command(message: types.Message, state: FSMContext):
     update_user_state_by_id(message.chat.id, str(AdminPanel.admin_menu))
     await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
 
+@dp.message_handler(text="⬅️Меню", state=AdminPanel.admin_menu)
+async def admin_menu_back(message: types.Message, state: FSMContext):
+    await MenuStates.waiting_for_profile.set()
+    update_user_state_by_id(message.chat.id, str(MenuStates.waiting_for_profile))
+    await message.reply("Вы вышли из панели администратора", reply_markup=rkbm)
+
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
