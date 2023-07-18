@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup,InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
-#gender buttons
 
+#gender buttons
 ikbg = InlineKeyboardMarkup(row_width=2)
 ibm = InlineKeyboardButton(text="Мужчина",callback_data='1')
 ibf = InlineKeyboardButton(text="Женщина",callback_data='0')
@@ -21,6 +21,7 @@ rkbm.row(khelp,kliderboard)
 profilebuttons = ReplyKeyboardMarkup(resize_keyboard=True)
 delprofile = KeyboardButton(text="Удалить профиль ❌")
 profilebuttons.row(delprofile)
+
 #confirm delete button
 confirmbutton = ReplyKeyboardMarkup(resize_keyboard=True)
 confbutton = KeyboardButton(text="Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.")
@@ -33,7 +34,7 @@ admk_user_editor = KeyboardButton(text="⚙️Изменить пользова�
 admk_event_creation = KeyboardButton(text="🛠️Создать мероприятие")
 admk_job_creation = KeyboardButton(text="📝Создать задание")
 admk_menu = KeyboardButton(text="⬅️Меню")
-admk_liderboard = KeyboardButton(text="📊Рейтинг")
+admk_liderboard = KeyboardButton(text="📊Борда")
 admrkbm.row(admk_user_editor)
 admrkbm.row(admk_event_creation)
 admrkbm.row(admk_job_creation)

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from supabase import Client , create_client
 
 
+
 load_dotenv()
 
 # Инициализация подключения к базе данных Supabase
@@ -53,6 +54,7 @@ def get_user_info_by_id(chat_id:int ) -> str:
         return response
     except Exception as e:
         print(f"Error get info about user: {chat_id}: {e}")
+
 
 
 

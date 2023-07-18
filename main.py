@@ -78,6 +78,14 @@ async def admin_menu_back(message: types.Message, state: FSMContext):
     update_user_state_by_id(message.chat.id, str(MenuStates.waiting_for_profile))
     await message.reply("Вы вышли из панели администратора", reply_markup=rkbm)
 
+@dp.message_handler(text="📊Борда", state=AdminPanel.admin_menu)
+async def admin_rating_board(message: types.Message, state: FSMContext):
+    await AdminPanel.rating_board.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.rating_board))
+    await show_rating(message.chat.id)
+    await AdminPanel.admin_menu.set()
+
+
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -309,7 +317,21 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
     print(sost)
     await start_command(message,state)
 
+async def show_rating(chat_id: int):
+    # Запрос топ 4 пользователей из БД
+    top_users = supabase.table('UsersData').select('full_name', 'balance', 'tgusr').order('balance').limit(4).execute()
 
+    # Формируем текст рейтинга
+    rating_text = "🏆 Рейтинг пользователей 🏆\n\n"
+    for i, user in enumerate(top_users.data):
+        position = len(top_users.data) - i
+        full_name = user['full_name']
+        balance = user['balance']
+        tgusr = user['tgusr']
+        rating_text += f"{position}. {full_name} ({tgusr}) - {balance} баллов\n"
+
+    # Отправляем сообщение
+    await bot.send_message(chat_id, rating_text, reply_markup=ikbmrating)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
