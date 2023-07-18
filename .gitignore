@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# JSON с гугл докой
+boilerpoint-393111-68b01f6645e3.json
+
 # Distribution / packaging
 .Python
 build/
