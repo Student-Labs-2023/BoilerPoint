@@ -14,7 +14,7 @@ pip install requirements.txt
 
 2. Получите все переменные для вашей среды следующим образом :
 
-- Из документации по gspread узнайте как получить ваш credentials.json 
+- Из документации по gspread узнайте как получить ваш credentials.json , который необходимо оставить в корневой папке и GoogleSheets
 
 - Из документации по supabase узнайте как получить ваши SUPABASE_URL & SUPABASE_KEY
 
