@@ -17,7 +17,17 @@ rkbm.row(kprofile,kexercise)
 rkbm.add(kschedule)
 rkbm.row(khelp,kliderboard)
 
+#profilemenu buttons
+profilebuttons = ReplyKeyboardMarkup(resize_keyboard=True)
+delprofile = KeyboardButton(text="Удалить профиль ❌")
+profilebuttons.row(delprofile)
+#confirm delete button
+confirmbutton = ReplyKeyboardMarkup(resize_keyboard=True)
+confbutton = KeyboardButton(text="Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.")
+confirmbutton.row(confbutton)
+
 #admin buttons
+admin_list=['5617565289']
 admrkbm = ReplyKeyboardMarkup(resize_keyboard=True)
 admk_user_editor = KeyboardButton(text="⚙️Изменить пользователя")
 admk_event_creation = KeyboardButton(text="🛠️Создать мероприятие")
@@ -28,8 +38,3 @@ admrkbm.row(admk_user_editor)
 admrkbm.row(admk_event_creation)
 admrkbm.row(admk_job_creation)
 admrkbm.row(admk_menu,admk_liderboard)
-
-#rating buttons
-ikbmrating = InlineKeyboardMarkup(row_width=1)
-ibrating = InlineKeyboardButton(text="Полный рейтинг",url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQFzN5HRvQhS5j4kDcv9wWH3uucCqp1AFmu2ErZYikmmJSshj1f16v7ry013vde0y6OYVWeSsVtgaKT/pubhtml?gid=0&single=true')
-ikbmrating.add(ibrating)

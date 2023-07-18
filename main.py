@@ -8,17 +8,16 @@ from dataclasses import dataclass
 from typing import Optional
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from buttons import ikbg, rkbm, ikbmrating, admrkbm
-from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id
+from buttons import *
+from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id, update_user_gender_by_id, update_user_age_by_id, update_user_name_by_id
 
-from GoogleSheets.Google_sheets import rating_update_start_thread
 
 load_dotenv()
 
 # Инициализация бота, диспетчера и хранилища состояний
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher(bot, storage=MemoryStorage())
-rating_update_start_thread()
+
 # DTO для хранения состояния регистрации пользователей
 @dataclass
 class UserRegistrationDTO:
@@ -46,28 +45,8 @@ class MenuStates(StatesGroup):
     help = State()
     rating = State()
 
-class AdminPanel(StatesGroup):
-    admin_menu = State()
-    change_user = State()
-    add_event = State()
-    add_task = State()
-    backward = State()
-    rating_board = State()
-
-# Хендлер для команды /admin
-@dp.message_handler(commands=['admin'], state='*')
-async def admin_command(message: types.Message, state: FSMContext):
-
-    # Проверка, что пользователь в списке админов
-    admin_list = ['5617565289', '415378656']
-    if str(message.from_user.id) not in admin_list:
-        await message.reply("У вас нет прав администратора!")
-        return
-
-    # Установка состояния и вывод кнопок админки
-    await AdminPanel.admin_menu.set()
-    update_user_state_by_id(message.chat.id, str(AdminPanel.admin_menu))
-    await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
+class ProlfileStates(StatesGroup):
+    delete_profile = State()
 
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):
@@ -92,6 +71,7 @@ async def start_command(message: types.Message, state: FSMContext):
 async def handle_age(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     age = message.text
+    
     # Проверка и валидация возраста пользователя
     try:
         age = int(age)
@@ -199,6 +179,11 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "📝Задания":
         await MenuStates.tasks.set()
         await handle_tasks(message, state)
+    elif select == "Удалить профиль ❌":
+        await bot.send_message(chat_id, "Вы действительно хотите удалить свой профиль?",reply_markup=confirmbutton)
+    elif select == "Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
+        await ProlfileStates.delete_profile.set()
+        await del_profile(message,state)
     else:
         await message.reply("Нет такого варианта выбора!")
 
@@ -228,18 +213,27 @@ async def handle_profile(message: types.Message, state: FSMContext):
                               f"{gender}{pseudo}, {age} лет\n└Ваше место в топе: ?\n\n" \
                               f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
 
-            await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message)
+            await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message,reply_markup=profilebuttons)
         else:
             await bot.send_message(chat_id, "Профиль не найден.")
     else:
         await bot.send_message(chat_id, "Некорректный выбор.")
     await MenuStates.waiting_for_profile.set()
 
+@dp.message_handler(state=ProlfileStates.delete_profile)
+async def del_profile(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    delete_user_data_by_id(chat_id)
+    await bot.send_message(chat_id,"Ваш профиль был удален!",reply_markup=types.ReplyKeyboardRemove())
+    await state.finish()
+
+
+
 @dp.message_handler(state=MenuStates.rating)
 async def handle_rating(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
-    await bot.send_message(chat_id, f"Нажата кнопка рейтинг",reply_markup=ikbmrating)
+    await bot.send_message(chat_id, f"Нажата кнопка рейтинг")
     update_user_state_by_id(chat_id, str(MenuStates.rating))
     await MenuStates.waiting_for_profile.set()
 
