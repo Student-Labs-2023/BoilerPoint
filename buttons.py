@@ -17,6 +17,16 @@ rkbm.row(kprofile,kexercise)
 rkbm.add(kschedule)
 rkbm.row(khelp,kliderboard)
 
+#profilemenu buttons
+profilebuttons = ReplyKeyboardMarkup(resize_keyboard=True)
+delprofile = KeyboardButton(text="Удалить профиль ❌")
+profilebuttons.row(delprofile)
+#confirm delete button
+confirmbutton = ReplyKeyboardMarkup(resize_keyboard=True)
+confbutton = KeyboardButton(text="Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.")
+confirmbutton.row(confbutton)
+
+
 #admin buttons
 admrkbm = ReplyKeyboardMarkup(resize_keyboard=True)
 admk_user_editor = KeyboardButton(text="⚙️Изменить пользователя")
