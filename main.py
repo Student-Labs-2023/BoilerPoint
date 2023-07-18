@@ -221,6 +221,9 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
         await ProlfileStates.delete_profile.set()
         await del_profile(message, state)
+    elif select == "Назад к профилю":
+        await MenuStates.profile.set()
+        await handle_profile(message, state)
     else:
         await message.reply("Нет такого варианта выбора!")
 
@@ -229,7 +232,7 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
 async def handle_profile(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
-    if select == "👤Профиль":
+    if select == "👤Профиль" or select == "Назад к профилю":
         # Запрос данных пользователя из базы данных Supabase
         response = get_user_info_by_id(chat_id)
         print(response)
