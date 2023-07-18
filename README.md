@@ -38,7 +38,7 @@ aiogram - https://aiogram.readthedocs.io/_/downloads/en/latest/pdf/
 schedule - https://schedule.readthedocs.io/en/stable/installation.html
 
 
-# Запуск бота 
+# Start Jelezyaka 
 
 После установки зависимостей и подключений введите в консоли следующее :
 
