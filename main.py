@@ -8,16 +8,17 @@ from dataclasses import dataclass
 from typing import Optional
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from buttons import ikbg, rkbm
+from buttons import ikbg, rkbm, ikbmrating
 from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id
 
+from GoogleSheets.Google_sheets import rating_update_start_thread
 
 load_dotenv()
 
 # Инициализация бота, диспетчера и хранилища состояний
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher(bot, storage=MemoryStorage())
-
+rating_update_start_thread()
 # DTO для хранения состояния регистрации пользователей
 @dataclass
 class UserRegistrationDTO:
@@ -216,7 +217,7 @@ async def handle_profile(message: types.Message, state: FSMContext):
 async def handle_rating(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
-    await bot.send_message(chat_id, f"Нажата кнопка рейтинг")
+    await bot.send_message(chat_id, f"Нажата кнопка рейтинг",reply_markup=ikbmrating)
     update_user_state_by_id(chat_id, str(MenuStates.rating))
     await MenuStates.waiting_for_profile.set()
 
