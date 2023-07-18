@@ -26,7 +26,7 @@ def rating_update():
     worksheet.sort((4, 'des'))
 
 def rating_update_over_time():
-    schedule.every(1).hour.do(rating_update)
+    schedule.every(20).seconds.do(rating_update)
     while True:
         schedule.run_pending()
 

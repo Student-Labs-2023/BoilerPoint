@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from buttons import ikbg, rkbm, ikbmrating
+from buttons import ikbg, rkbm, ikbmrating, admrkbm
 from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id
 
 from GoogleSheets.Google_sheets import rating_update_start_thread
@@ -46,6 +46,28 @@ class MenuStates(StatesGroup):
     help = State()
     rating = State()
 
+class AdminPanel(StatesGroup):
+    admin_menu = State()
+    change_user = State()
+    add_event = State()
+    add_task = State()
+    backward = State()
+    rating_board = State()
+
+# Хендлер для команды /admin
+@dp.message_handler(commands=['admin'], state='*')
+async def admin_command(message: types.Message, state: FSMContext):
+
+    # Проверка, что пользователь в списке админов
+    admin_list = ['5617565289', '415378656']
+    if str(message.from_user.id) not in admin_list:
+        await message.reply("У вас нет прав администратора!")
+        return
+
+    # Установка состояния и вывод кнопок админки
+    await AdminPanel.admin_menu.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.admin_menu))
+    await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
 
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):

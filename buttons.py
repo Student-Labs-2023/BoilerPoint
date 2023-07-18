@@ -18,7 +18,6 @@ rkbm.add(kschedule)
 rkbm.row(khelp,kliderboard)
 
 #admin buttons
-admin_list=['5617565289']
 admrkbm = ReplyKeyboardMarkup(resize_keyboard=True)
 admk_user_editor = KeyboardButton(text="⚙️Изменить пользователя")
 admk_event_creation = KeyboardButton(text="🛠️Создать мероприятие")
