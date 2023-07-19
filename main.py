@@ -275,7 +275,7 @@ async def start_command(message: types.Message, state: FSMContext):
         user = user if user else User(chat_id=chat_id)
 
         # Сохранение состояния пользователя
-        telegram_name = message.from_user.first_name
+        telegram_name = message.from_user.username
 
         user.user_state = str(RegistrationStates.waiting_for_age)
         if telegram_name == "":
