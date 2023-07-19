@@ -9,7 +9,7 @@ from typing import Optional
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from buttons import *
-from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id
+from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id , update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
 from GoogleSheets.Google_sheets import rating_update_start_thread
 
 load_dotenv()
@@ -44,6 +44,7 @@ class MenuStates(StatesGroup):
     calendar = State()
     help = State()
     rating = State()
+
 #Состояние удаления профиля
 class ProlfileStates(StatesGroup):
     delete_profile = State()
@@ -52,6 +53,14 @@ class ProlfileStates(StatesGroup):
 class AdminPanel(StatesGroup):
     admin_menu = State()
     change_user = State()
+    change_user_end = State()
+    change_user_start = State()
+    change_user_fullname = State()
+    change_user_fullnamestart = State()
+    change_user_age = State()
+    change_user_agestart = State()
+    change_user_balance = State()
+    change_user_balancestart = State()
     add_event = State()
     add_task = State()
     backward = State()
@@ -71,6 +80,106 @@ async def admin_command(message: types.Message, state: FSMContext):
     await AdminPanel.admin_menu.set()
     update_user_state_by_id(message.chat.id, str(AdminPanel.admin_menu))
     await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
+
+# Хендлер для кнопки  ️Изменить пользователя
+@dp.message_handler(text="⚙️Изменить пользователя", state=AdminPanel.admin_menu)
+async def admin_change_user(message: types.Message, state: FSMContext):
+    await AdminPanel.change_user_start.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.change_user_start))
+    await message.reply("Вы попали в меню редактирования пользователя, нажмите нужную вам кнопку чтобы изменить параметры пользователя. После нажатия на кнопку введите @username человека в телеграм чтобы поменять его параметры.", reply_markup=admue)
+
+#Хендлер для смены баланса через админа
+@dp.message_handler(text="Изменить баланс", state="*")
+async def admin_change_user_balance(message:types.Message, state: FSMContext):
+    await AdminPanel.change_user_balancestart.set()
+    await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+
+@dp.message_handler(state=AdminPanel.change_user_balancestart)
+async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
+    username = message.text  # получаем username
+    await state.update_data(username=username)
+    await AdminPanel.change_user_balance.set()
+    await message.reply("Введите новый баланс пользователя")
+
+@dp.message_handler(state=AdminPanel.change_user_balance)
+async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
+    new_balance = message.text
+    data = await state.get_data()
+    username = data.get("username")
+
+    update_user_balance_by_tgusr(username, new_balance)
+
+    #   Отправляем сообщение об успешном обновлении
+    await message.reply(f"Баланс пользователя {username} успешно обновлен на {new_balance}", reply_markup=admue)
+    await state.finish()
+    await AdminPanel.change_user_end.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.change_user_end))
+
+#Хендлер для смены фио через админа
+@dp.message_handler(text="Изменить ФИО", state="*")
+async def admin_change_user_fullname(message: types.Message, state: FSMContext):
+    await AdminPanel.change_user_fullnamestart.set()
+    await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+
+@dp.message_handler(state=AdminPanel.change_user_fullnamestart)
+async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
+    username = message.text  # получаем username
+    await state.update_data(username=username)  # сохраняем username в данных состояния
+
+    await AdminPanel.change_user_fullname.set()  # переходим к следующему состоянию
+    await message.reply("Введите новое ФИО пользователя")
+
+@dp.message_handler(state=AdminPanel.change_user_fullname)
+async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
+    new_fullname = message.text  # получаем новое ФИО
+    data = await state.get_data()
+    username = data.get("username")  # получаем сохраненный username из данных состояния
+
+    # Обновляем ФИО пользователя
+    update_user_fullname_by_tgusr(username, new_fullname)
+
+    # Отправляем сообщение об успешном обновлении
+    await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_fullname}", reply_markup=admue)
+    await state.finish()
+    await AdminPanel.change_user_end.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.change_user_end))
+
+# Хендлер для смены возраста через админ меню
+@dp.message_handler(text="Изменить возраст", state = "*")
+async def admin_change_user_age(message: types.Message,state: FSMContext):
+    await AdminPanel.change_user_age.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.change_user_age))
+    await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+
+@dp.message_handler(state=AdminPanel.change_user_age)
+async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
+    username = message.text  # получаем username
+    await state.update_data(username=username)  # сохраняем username в данных состояния
+
+    await AdminPanel.change_user_agestart.set()  # переходим к следующему состоянию
+    await message.reply("Введите новый возраст пользователя")
+
+@dp.message_handler(state=AdminPanel.change_user_agestart)
+async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
+    new_age = message.text  # получаем новый возраст
+    data = await state.get_data()
+    username = data.get("username")  # получаем сохраненный username из данных состояния
+
+    # Обновляем возраст пользователя
+    update_user_age_by_tgusr(username, new_age)
+
+    # Отправляем сообщение об успешном обновлении
+    await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_age}", reply_markup=admue)
+    await state.finish()
+    await AdminPanel.change_user_end.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.change_user_end))
+
+# Хедлер для бека в меню админа
+@dp.message_handler(text="⬅️ к Админ меню", state = [AdminPanel.change_user_start ,AdminPanel.change_user_end])
+async def admin_backtomenu(message: types.Message, state: FSMContext):
+    await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
+    await AdminPanel.admin_menu.set()
+    update_user_state_by_id(message.chat.id, str(AdminPanel.admin_menu))
 
 @dp.message_handler(text="⬅️Меню", state=AdminPanel.admin_menu)
 async def admin_menu_back(message: types.Message, state: FSMContext):

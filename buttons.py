@@ -45,6 +45,18 @@ admrkbm.row(admk_event_creation)
 admrkbm.row(admk_job_creation)
 admrkbm.row(admk_menu,admk_liderboard)
 
+# admin user editor button
+admue = ReplyKeyboardMarkup(resize_keyboard=True)
+admue_fullname_editor = KeyboardButton(text="Изменить ФИО")
+admue_age_editor = KeyboardButton(text="Изменить возраст")
+admue_balance_editor = KeyboardButton(text="Изменить баланс")
+admue_back = KeyboardButton(text="⬅️ к Админ меню")
+admue.row(admue_fullname_editor)
+admue.row(admue_age_editor)
+admue.row(admue_balance_editor)
+admue.row(admue_back)
+
+
 #rating buttons
 ikbmrating = InlineKeyboardMarkup(row_width=1)
 ibrating = InlineKeyboardButton(text="Полный рейтинг",url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQFzN5HRvQhS5j4kDcv9wWH3uucCqp1AFmu2ErZYikmmJSshj1f16v7ry013vde0y6OYVWeSsVtgaKT/pubhtml?gid=0&single=true')
