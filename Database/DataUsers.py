@@ -35,6 +35,26 @@ def update_user_state_by_id(chat_id: int, state: str):
     except Exception as e:
         print(f"Error updating user state for {chat_id}: {e}")
 
+def update_user_fullname_by_tgusr(tgusr: str, full_name: str):
+    try:
+        response = supabase.table(table_name).update({'full_name': full_name}).eq('tgusr', tgusr).execute()
+        print(f"Updated user fullname for {tgusr}: {full_name}")
+    except Exception as e:
+        print(f"Error updating user fullname for {tgusr}: {e}")
+
+def update_user_age_by_tgusr(tgusr: str, age : int):
+    try:
+        response = supabase.table(table_name).update({'age': age}).eq('tgusr', tgusr).execute()
+        print(f"Updated user age for {tgusr}: {age}")
+    except Exception as e:
+        print(f"Error updating user age for {tgusr}: {e}")
+
+def update_user_balance_by_tgusr(tgusr: str, balance : int):
+    try:
+        response = supabase.table(table_name).update({'balance': balance}).eq('tgusr', tgusr).execute()
+        print(f"Updated user balance for {tgusr}: {balance}")
+    except Exception as e:
+        print(f"Error updating user balance for {tgusr}: {e}")
 
 def delete_user_data_by_id(chat_id: int) -> str:
     try:
