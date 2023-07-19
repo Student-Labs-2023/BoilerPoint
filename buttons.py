@@ -21,6 +21,8 @@ rkbm.row(khelp,kliderboard)
 profilebuttons = ReplyKeyboardMarkup(resize_keyboard=True)
 delprofile = KeyboardButton(text="Удалить профиль ❌")
 profilebuttons.row(delprofile)
+backtomenubutton = KeyboardButton(text="Назад в меню")
+profilebuttons.row(backtomenubutton)
 
 #confirm delete button and back button to profile
 confirmbutton = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -29,11 +31,6 @@ backbutton = KeyboardButton(text="Назад к профилю")
 
 confirmbutton.row(confbutton)
 confirmbutton.row(backbutton)
-
-#confirm delete button
-confirmbutton = ReplyKeyboardMarkup(resize_keyboard=True)
-confbutton = KeyboardButton(text="Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.")
-confirmbutton.row(confbutton)
 
 
 #admin buttons
