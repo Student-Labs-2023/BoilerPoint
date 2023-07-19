@@ -224,6 +224,9 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "Назад к профилю":
         await MenuStates.profile.set()
         await handle_profile(message, state)
+    elif select == "Назад в меню":
+        await MenuStates.waiting_for_profile.set()
+        await bot.send_message(chat_id,"Вы вышли в меню! ",reply_markup=rkbm)
     else:
         await message.reply("Нет такого варианта выбора!")
 
