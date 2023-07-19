@@ -14,6 +14,7 @@ from src.repository.usersrepository import UserRepository
 from src.repository.SupabaseUserRepository import SupabaseUserRepository
 from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
+from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id , update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
 
 
 
@@ -116,7 +117,7 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     data = await state.get_data()
     username = data.get("username")
     user = users.get(message.chat.id)
-    user.balance = new_balance
+    update_user_balance_by_tgusr(username,new_balance)
     users.set(user)
 
     #   Отправляем сообщение об успешном обновлении
@@ -149,7 +150,7 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     # Обновляем ФИО пользователя
     user = users.get(message.chat.id)
     user.full_name = new_fullname
-    users.set(user)
+    update_user_fullname_by_tgusr(username,new_fullname)
 
     # Отправляем сообщение об успешном обновлении
     await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_fullname}", reply_markup=admue)
@@ -184,7 +185,7 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
     # Обновляем возраст пользователя
     user = users.get(message.chat.id)
     user.age = new_age
-    users.set(user)
+    update_user_age_by_tgusr(username,new_age)
 
     # Отправляем сообщение об успешном обновлении
     await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_age}", reply_markup=admue)
@@ -424,7 +425,7 @@ async def handle_tasks(message: types.Message, state: FSMContext):
 
 
 # Ответ на отправку стикера
-@dp.message_handler(content_types=types.ContentType.STICKER, state=None)
+@dp.message_handler(content_types=types.ContentType.STICKER, state="*")
 async def handle_sticker(message: types.Message):
     chat_id = message.chat.id
     await bot.send_message(chat_id, "Извините, я не принимаю стикеры.")
