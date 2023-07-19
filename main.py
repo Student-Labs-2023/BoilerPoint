@@ -14,9 +14,7 @@ from src.repository.usersrepository import UserRepository
 from src.repository.SupabaseUserRepository import SupabaseUserRepository
 from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
-from Database.DataUsers import get_user_state_by_id, update_user_state_by_id, supabase,delete_user_data_by_id, get_user_info_by_id , update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
-
-
+from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id , update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
 
 load_dotenv()
 
@@ -24,8 +22,6 @@ load_dotenv()
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher(bot, storage=MemoryStorage())
 rating_update_start_thread()
-
-# Init supabase and repos
 
 # Инициализация подключения к базе данных Supabase
 url: str = os.environ.get("SUPABASE_URL")
@@ -98,11 +94,13 @@ async def admin_change_user(message: types.Message, state: FSMContext):
     users.set(user)
     await message.reply("Вы попали в меню редактирования пользователя, нажмите нужную вам кнопку чтобы изменить параметры пользователя. После нажатия на кнопку введите @username человека в телеграм чтобы поменять его параметры.", reply_markup=admue)
 
-#Хендлер для смены баланса через админа
 @dp.message_handler(text="Изменить баланс", state="*")
 async def admin_change_user_balance(message:types.Message, state: FSMContext):
     await AdminPanel.change_user_balancestart.set()
     await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.change_user_balancestart)
+    users.set(user)
 
 @dp.message_handler(state=AdminPanel.change_user_balancestart)
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
@@ -110,29 +108,35 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     await state.update_data(username=username)
     await AdminPanel.change_user_balance.set()
     await message.reply("Введите новый баланс пользователя")
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.change_user_balance)
+    users.set(user)
+
 
 @dp.message_handler(state=AdminPanel.change_user_balance)
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
     new_balance = message.text
     data = await state.get_data()
     username = data.get("username")
-    user = users.get(message.chat.id)
     update_user_balance_by_tgusr(username,new_balance)
-    users.set(user)
-
     #   Отправляем сообщение об успешном обновлении
     await message.reply(f"Баланс пользователя {username} успешно обновлен на {new_balance}", reply_markup=admue)
     await state.finish()
+    await AdminPanel.change_user_end.set()
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_end)
     users.set(user)
-    await AdminPanel.change_user_end.set()
 
 #Хендлер для смены фио через админа
 @dp.message_handler(text="Изменить ФИО", state="*")
 async def admin_change_user_fullname(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_fullnamestart.set()
     await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.change_user_fullnamestart)
+    users.set(user)
+
+
 
 @dp.message_handler(state=AdminPanel.change_user_fullnamestart)
 async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
@@ -140,25 +144,33 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     await state.update_data(username=username)  # сохраняем username в данных состояния
     await AdminPanel.change_user_fullname.set()  # переходим к следующему состоянию
     await message.reply("Введите новое ФИО пользователя")
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.change_user_fullname)
+    users.set(user)
 
 @dp.message_handler(state=AdminPanel.change_user_fullname)
 async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
     new_fullname = message.text  # получаем новое ФИО
-    data = await state.get_data()
-    username = data.get("username")  # получаем сохраненный username из данных состояния
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40:
+        data = await state.get_data()
+        username = data.get("username")  # получаем сохраненный username из данных состояния
+        # Обновляем ФИО пользователя
+        update_user_fullname_by_tgusr(username,new_fullname)
+        # Отправляем сообщение об успешном обновлении
+        await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_fullname}", reply_markup=admue)
+        await state.finish()
+        user = users.get(message.chat_id)
+        await AdminPanel.change_user_end.set()
+        user.user_state = str(AdminPanel.change_user_end)
+        users.set(user)
+    else:
+        await message.reply("Неккоректное ФИО")
+        await AdminPanel.change_user_fullname.set()
+        user = users.get(message.chat.id)
+        user.user_state = str(AdminPanel.change_user_fullname)
+        users.set(user)
 
-    # Обновляем ФИО пользователя
-    user = users.get(message.chat.id)
-    user.full_name = new_fullname
-    update_user_fullname_by_tgusr(username,new_fullname)
 
-    # Отправляем сообщение об успешном обновлении
-    await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_fullname}", reply_markup=admue)
-    await state.finish()
-    user = users.get(message.chat.id)
-    user.user_state = str(AdminPanel.change_user_end)
-    users.set(user)
-    await AdminPanel.change_user_end.set()
 # Хендлер для смены возраста через админ меню
 @dp.message_handler(text="Изменить возраст", state = "*")
 async def admin_change_user_age(message: types.Message,state: FSMContext):
@@ -174,27 +186,35 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
     await state.update_data(username=username)  # сохраняем username в данных состояния
 
     await AdminPanel.change_user_agestart.set()  # переходим к следующему состоянию
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.change_user_agestart)
+    users.set(user)
+
     await message.reply("Введите новый возраст пользователя")
 
 @dp.message_handler(state=AdminPanel.change_user_agestart)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
     new_age = message.text  # получаем новый возраст
-    data = await state.get_data()
-    username = data.get("username")  # получаем сохраненный username из данных состояния
-
-    # Обновляем возраст пользователя
-    user = users.get(message.chat.id)
-    user.age = new_age
-    update_user_age_by_tgusr(username,new_age)
-
-    # Отправляем сообщение об успешном обновлении
-    await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_age}", reply_markup=admue)
-    await state.finish()
-    await AdminPanel.change_user_end.set()
-    user = users.get(message.chat.id)
-    user.user_state = str(AdminPanel.change_user_end)
-    users.set(user)
-
+    try:
+        new_age = int(new_age)
+    except ValueError as e:
+        await message.reply("Ваш возраст неккоректен. Возраст не должен содержать буквы!")
+        print(f"Error validation age{e}")
+    if new_age < 12 or new_age > 122:
+        await message.reply("Ваш возраст неккоректен. Возраст должен лежать в диапазоне от 12 - 122")
+        await AdminPanel.change_user_agestart.set()
+    else:
+        data = await state.get_data()
+        username = data.get("username")  # получаем сохраненный username из данных состояния
+        # Обновляем возраст пользователя
+        update_user_age_by_tgusr(username,new_age)
+        # Отправляем сообщение об успешном обновлении
+        await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_age}", reply_markup=admue)
+        await state.finish()
+        await AdminPanel.change_user_end.set()
+        user = users.get(message.chat.id)
+        user.user_state = str(AdminPanel.change_user_end)
+        users.set(user)
 # Хедлер для бека в меню админа
 @dp.message_handler(text="⬅️ к Админ меню", state = [AdminPanel.change_user_start ,AdminPanel.change_user_end])
 async def admin_backtomenu(message: types.Message, state: FSMContext):
@@ -220,6 +240,10 @@ async def admin_rating_board(message: types.Message, state: FSMContext):
     users.set(user)
     await show_rating(message.chat.id)
     await AdminPanel.admin_menu.set() 
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.admin_menu)
+    users.set(user)
+
 
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):
@@ -235,6 +259,7 @@ async def start_command(message: types.Message, state: FSMContext):
         
         # Сохранение состояния пользователя
         telegram_name = message.from_user.first_name
+       
         user.user_state = str(RegistrationStates.waiting_for_age)
         if telegram_name == "":
             user.tgusr = "У пользователя нет имени"
@@ -256,7 +281,7 @@ async def handle_age(message: types.Message, state: FSMContext):
     except ValueError as e:
         await bot.send_message(chat_id,"Ваш возраст неккоректен. Возраст не должен содержать буквы!")
         print(f"Error validation age{e}")
-    if int(age) < 12 or int(age) > 122:
+    if age < 12 or age > 122:
         await bot.send_message(chat_id,"Ваш возраст неккоректен. Возраст должен лежать в диапазоне от 12 - 122")
         await RegistrationStates.waiting_for_age.set()
     else:    
@@ -309,7 +334,7 @@ async def handle_name(message: types.Message, state: FSMContext):
         
         await state.finish()
         await MenuStates.profile.set()
-    else:
+    else:    
         await bot.send_message(chat_id, f"Пожалуйста, введите корректно свое ФИО")
         await RegistrationStates.waiting_for_name.set()
 
@@ -425,13 +450,13 @@ async def handle_tasks(message: types.Message, state: FSMContext):
 
 
 # Ответ на отправку стикера
-@dp.message_handler(content_types=types.ContentType.STICKER, state="*")
+@dp.message_handler(content_types=types.ContentType.STICKER, state=None)
 async def handle_sticker(message: types.Message):
     chat_id = message.chat.id
     await bot.send_message(chat_id, "Извините, я не принимаю стикеры.")
 
 # ВНИМАНИЕ! Данный handler ловит людей без состояния!
-@dp.message_handler(state=None)
+@dp.message_handler(state= '*')
 async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
     sost = await state.get_state()
     print(sost)
@@ -455,4 +480,3 @@ async def show_rating(chat_id: int):
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
