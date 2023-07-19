@@ -422,7 +422,7 @@ async def handle_profile(message: types.Message, state: FSMContext):
             image = os.environ.get("MALE")
         else:
             gender = "🙋‍♀️"
-            image = os.environ.get("MALE")
+            image = os.environ.get("FEMALE")
         # Формирование сообщения профиля пользователя
         profile_message = f"Добро пожаловать в ваш профиль:\n\n" \
                           f"{gender}{pseudo}, {age} лет\n└Ваше место в топе: ?\n\n" \
