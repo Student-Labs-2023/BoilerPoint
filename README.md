@@ -26,6 +26,17 @@ pip install requirements.txt
 Теперь переместите свои .env файлы в корневую директорию проекта , а также в Database
 
 
+
+# Для тестировщиков 
+
+- Зарегистрируйтесь в SupaBase и пришлите мне в телеграм (t.me/whitehodok) e-mail на который вы зарегистрировались
+  
+- Получите у меня в телеграме (t.me/whitehodok) наш .env
+  
+- Получите у меня в телеграме (t.me/whitehodok) наш credentials.json
+
+
+
 # Documentation 
 SupaBase - https://supabase.com/docs
 
