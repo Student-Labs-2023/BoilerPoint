@@ -41,7 +41,6 @@ class RegistrationStates(StatesGroup):
     waiting_for_name = State()
     final_reg = State()
 
-
 # Состояния меню
 class MenuStates(StatesGroup):
     waiting_for_profile = State()
@@ -51,11 +50,9 @@ class MenuStates(StatesGroup):
     help = State()
     rating = State()
 
-
 # Состояние удаления профиля
 class ProlfileStates(StatesGroup):
     delete_profile = State()
-
 
 # Состояния админ-панели
 class AdminPanel(StatesGroup):
@@ -74,11 +71,10 @@ class AdminPanel(StatesGroup):
     backward = State()
     rating_board = State()
 
-
 @dp.message_handler(commands=['admin'], state='*')
 async def admin_command(message: types.Message, state: FSMContext):
     # Проверка, что пользователь в списке админов
-    admin_list = ['5617565289', '415378656', '551929814']
+    admin_list = ['5617565289', '415378656', '551929814', '390483228']
     if str(message.from_user.id) not in admin_list:
         await message.reply("У вас нет прав администратора!")
         return
@@ -89,7 +85,6 @@ async def admin_command(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
     await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
-
 
 # Хендлер для кнопки  ️Изменить пользователя
 @dp.message_handler(text="⚙️Изменить пользователя", state=AdminPanel.admin_menu)
@@ -102,7 +97,6 @@ async def admin_change_user(message: types.Message, state: FSMContext):
         "Вы попали в меню редактирования пользователя, нажмите нужную вам кнопку чтобы изменить параметры пользователя. После нажатия на кнопку введите @username человека в телеграм чтобы поменять его параметры.",
         reply_markup=admue)
 
-
 @dp.message_handler(text="Изменить баланс", state="*")
 async def admin_change_user_balance(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_balancestart.set()
@@ -110,7 +104,6 @@ async def admin_change_user_balance(message: types.Message, state: FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_balancestart)
     users.set(user)
-
 
 @dp.message_handler(state=AdminPanel.change_user_balancestart)
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
@@ -121,7 +114,6 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_balance)
     users.set(user)
-
 
 @dp.message_handler(state=AdminPanel.change_user_balance)
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
@@ -137,7 +129,6 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     user.user_state = str(AdminPanel.change_user_end)
     users.set(user)
 
-
 # Хендлер для смены фио через админа
 @dp.message_handler(text="Изменить ФИО", state="*")
 async def admin_change_user_fullname(message: types.Message, state: FSMContext):
@@ -146,7 +137,6 @@ async def admin_change_user_fullname(message: types.Message, state: FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_fullnamestart)
     users.set(user)
-
 
 @dp.message_handler(state=AdminPanel.change_user_fullnamestart)
 async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
@@ -157,7 +147,6 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_fullname)
     users.set(user)
-
 
 @dp.message_handler(state=AdminPanel.change_user_fullname)
 async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
@@ -181,7 +170,6 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         user.user_state = str(AdminPanel.change_user_fullname)
         users.set(user)
 
-
 # Хендлер для смены возраста через админ меню
 @dp.message_handler(text="Изменить возраст", state="*")
 async def admin_change_user_age(message: types.Message, state: FSMContext):
@@ -190,7 +178,6 @@ async def admin_change_user_age(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.change_user_age)
     users.set(user)
     await message.reply("Введите @username пользователя, которого необходимо отредактировать")
-
 
 @dp.message_handler(state=AdminPanel.change_user_age)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
@@ -203,7 +190,6 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
     users.set(user)
 
     await message.reply("Введите новый возраст пользователя")
-
 
 @dp.message_handler(state=AdminPanel.change_user_agestart)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
@@ -229,7 +215,6 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         user.user_state = str(AdminPanel.change_user_end)
         users.set(user)
 
-
 # Хедлер для бека в меню админа
 @dp.message_handler(text="⬅️ к Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_backtomenu(message: types.Message, state: FSMContext):
@@ -239,7 +224,6 @@ async def admin_backtomenu(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
 
-
 @dp.message_handler(text="⬅️Меню", state=AdminPanel.admin_menu)
 async def admin_menu_back(message: types.Message, state: FSMContext):
     await MenuStates.waiting_for_profile.set()
@@ -247,7 +231,6 @@ async def admin_menu_back(message: types.Message, state: FSMContext):
     user.user_state = str(MenuStates.waiting_for_profile)
     users.set(user)
     await message.reply("Вы вышли из панели администратора", reply_markup=rkbm)
-
 
 @dp.message_handler(text="📊Борда", state=AdminPanel.admin_menu)
 async def admin_rating_board(message: types.Message, state: FSMContext):
@@ -260,7 +243,6 @@ async def admin_rating_board(message: types.Message, state: FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
-
 
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):
@@ -289,7 +271,6 @@ async def start_command(message: types.Message, state: FSMContext):
         # Установка состояния "waiting_for_age" для пользователя
         await RegistrationStates.waiting_for_age.set()
 
-
 @dp.message_handler(state=RegistrationStates.waiting_for_age)
 async def handle_age(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -317,7 +298,6 @@ async def handle_age(message: types.Message, state: FSMContext):
         # Запрашиваем пол пользователя
         await message.reply("Введите ваш пол (Male/Female):", reply_markup=ikbg)
 
-
 @dp.callback_query_handler(state=RegistrationStates.waiting_for_gender)
 async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
     chat_id = query.message.chat.id
@@ -333,7 +313,6 @@ async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
     await RegistrationStates.waiting_for_name.set()
     user.user_state = str(RegistrationStates.waiting_for_name)
     users.set(user)
-
 
 @dp.message_handler(state=RegistrationStates.waiting_for_name)
 async def handle_name(message: types.Message, state: FSMContext):
@@ -359,7 +338,6 @@ async def handle_name(message: types.Message, state: FSMContext):
     else:
         await bot.send_message(chat_id, f"Пожалуйста, введите корректно свое ФИО")
         await RegistrationStates.waiting_for_name.set()
-
 
 @dp.message_handler(state=MenuStates.waiting_for_profile)
 async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
@@ -433,7 +411,6 @@ async def handle_profile(message: types.Message, state: FSMContext):
         await bot.send_message(chat_id, "Некорректный выбор.")
     await MenuStates.waiting_for_profile.set()
 
-
 # Обработчик нажатия на кнопку удалить профиль
 @dp.message_handler(state=ProlfileStates.delete_profile)
 async def del_profile(message: types.Message, state: FSMContext):
@@ -442,7 +419,6 @@ async def del_profile(message: types.Message, state: FSMContext):
     users.delete(user)
     await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
     await state.finish()
-
 
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
@@ -454,7 +430,6 @@ async def handle_calendar(message: types.Message, state: FSMContext):
     users.set(user)
     await MenuStates.waiting_for_profile.set()
 
-
 @dp.message_handler(state=MenuStates.help)
 async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -464,7 +439,6 @@ async def handle_help(message: types.Message, state: FSMContext):
     user.user_state = str(MenuStates.help)
     users.set(user)
     await MenuStates.waiting_for_profile.set()
-
 
 @dp.message_handler(state=MenuStates.tasks)
 async def handle_tasks(message: types.Message, state: FSMContext):
@@ -476,21 +450,18 @@ async def handle_tasks(message: types.Message, state: FSMContext):
     users.set(user)
     await MenuStates.waiting_for_profile.set()
 
-
 # Ответ на отправку стикера
-@dp.message_handler(content_types=types.ContentType.STICKER, state=None)
+@dp.message_handler(content_types=types.ContentType.STICKER, state="*")
 async def handle_sticker(message: types.Message):
     chat_id = message.chat.id
     await bot.send_message(chat_id, "Извините, я не принимаю стикеры.")
 
-
 # ВНИМАНИЕ! Данный handler ловит людей без состояния!
-@dp.message_handler(state='*')
+@dp.message_handler(state= None)
 async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
     sost = await state.get_state()
     print(sost)
     await start_command(message, state)
-
 
 async def show_rating(chat_id: int):
     # Запрос топ 4 пользователей из БД
