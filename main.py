@@ -494,12 +494,12 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
 
 async def show_rating(chat_id: int):
     # Запрос топ 4 пользователей из БД
-    top_users = supabase.table('UsersData').select('full_name', 'balance', 'tgusr').order('balance').limit(4).execute()
+    top_users = supabase.table('UsersData').select('full_name', 'balance', 'tgusr').order('balance', desc = True).execute()
 
     # Формируем текст рейтинга
     rating_text = "🏆 Рейтинг пользователей 🏆\n\n"
     for i, user in enumerate(top_users.data):
-        position = len(top_users.data) - i
+        position = i + 1
         full_name = user['full_name']
         balance = user['balance']
         tgusr = user['tgusr']
@@ -510,12 +510,12 @@ async def show_rating(chat_id: int):
 
 async def show_user_rating(chat_id: int):
     # Запрос топ 4 пользователей из БД
-    top_users = supabase.table('UsersData').select('full_name', 'balance', ).order('balance').limit(4).execute()
+    top_users = supabase.table('UsersData').select('full_name', 'balance', ).order('balance', desc = True).limit(4).execute()
 
     # Формируем текст рейтинга
     rating_text = "🏆 Рейтинг пользователей 🏆\n\n"
     for i, user in enumerate(top_users.data):
-        position = len(top_users.data) - i
+        position = i + 1
         full_name = user['full_name']
         balance = user['balance']
         rating_text += f"{position}. {full_name}  - {balance} баллов\n"
