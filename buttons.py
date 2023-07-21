@@ -1,5 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup,InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
+#remove keyboard
+remover = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(text = " "))
+
+
 #gender buttons
 ikbg = InlineKeyboardMarkup(row_width=2)
 ibm = InlineKeyboardButton(text="Мужчина",callback_data='1')
@@ -55,6 +59,8 @@ admue.row(admue_fullname_editor)
 admue.row(admue_age_editor)
 admue.row(admue_balance_editor)
 admue.row(admue_back)
+admui = ReplyKeyboardMarkup(resize_keyboard=True)
+admui_back = InlineKeyboardButton(text="Отменить редактирование")
 
 
 #rating buttons
