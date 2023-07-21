@@ -260,7 +260,7 @@ async def start_command(message: types.Message, state: FSMContext):
         telegram_name = message.from_user.username
 
         user.user_state = str(RegistrationStates.waiting_for_age)
-        if telegram_name == "":
+        if telegram_name == None:
             user.tgusr = "У пользователя нет имени"
         else:
             user.tgusr = "@" + telegram_name
