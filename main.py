@@ -484,7 +484,7 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
 
 async def show_rating(chat_id: int):
     # Запрос топ 4 пользователей из БД
-    top_users = supabase.table('UsersData').select('full_name', 'balance', 'tgusr').order('balance', desc = True).execute()
+    top_users = supabase.table('UsersData').select('full_name', 'balance', 'tgusr').order('balance', desc = True).limit(4).execute()
 
     # Формируем текст рейтинга
     rating_text = "🏆 Рейтинг пользователей 🏆\n\n"
