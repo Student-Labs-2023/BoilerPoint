@@ -298,6 +298,14 @@ async def handle_age(message: types.Message, state: FSMContext):
         # Запрашиваем пол пользователя
         await message.reply("Введите ваш пол (Male/Female):", reply_markup=ikbg)
 
+
+@dp.message_handler(state=RegistrationStates.waiting_for_gender)
+async def handle_gender(message: types.Message, state: FSMContext):
+    gender = message.text.lower()
+    if gender not in ["мужской", "женский"]:
+        await message.reply("Пол указан некорректно. Выберите пол кнопками ниже:", reply_markup=ikbg)
+        return
+
 @dp.callback_query_handler(state=RegistrationStates.waiting_for_gender)
 async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
     chat_id = query.message.chat.id
