@@ -71,6 +71,17 @@ class AdminPanel(StatesGroup):
     backward = State()
     rating_board = State()
 
+
+cancel_button = InlineKeyboardButton(text="Отмена", callback_data="cancel")
+
+# Хендлер отмены действия через кнопку
+@dp.callback_query_handler(text="cancel", state="*")
+async def cancel_action(call: types.CallbackQuery, state: FSMContext):
+    await call.message.edit_reply_markup(reply_markup=None)
+    await state.finish()
+    await call.message.answer("Действие отменено")
+
+
 @dp.message_handler(commands=['admin'], state='*')
 async def admin_command(message: types.Message, state: FSMContext):
     # Проверка, что пользователь в списке админов
@@ -110,7 +121,7 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     username = message.text  # получаем username
     await state.update_data(username=username)
     await AdminPanel.change_user_balance.set()
-    await message.reply("Введите новый баланс пользователя")
+    await message.reply("Введите новый баланс пользователя", reply_markup=InlineKeyboardMarkup().add(cancel_button))
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_balance)
     users.set(user)
@@ -143,7 +154,7 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     username = message.text  # получаем username
     await state.update_data(username=username)  # сохраняем username в данных состояния
     await AdminPanel.change_user_fullname.set()  # переходим к следующему состоянию
-    await message.reply("Введите новое ФИО пользователя")
+    await message.reply("Введите новое ФИО пользователя", reply_markup=InlineKeyboardMarkup().add(cancel_button))
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_fullname)
     users.set(user)
@@ -189,7 +200,7 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
     user.user_state = str(AdminPanel.change_user_agestart)
     users.set(user)
 
-    await message.reply("Введите новый возраст пользователя")
+    await message.reply("Введите новый возраст пользователя", reply_markup=InlineKeyboardMarkup().add(cancel_button))
 
 @dp.message_handler(state=AdminPanel.change_user_agestart)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):

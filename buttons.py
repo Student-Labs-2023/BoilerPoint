@@ -1,7 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup,InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
-#remove keyboard
-remover = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton(text = " "))
+
 
 
 #gender buttons
