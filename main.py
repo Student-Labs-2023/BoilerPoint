@@ -100,7 +100,7 @@ async def admin_change_user(message: types.Message, state: FSMContext):
 @dp.message_handler(text="Изменить баланс", state="*")
 async def admin_change_user_balance(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_balancestart.set()
-    await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+    await message.reply("Введите @username пользователя, которого необходимо отредактировать", reply_markup=types.ReplyKeyboardRemove())
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_balancestart)
     users.set(user)
@@ -133,7 +133,7 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
 @dp.message_handler(text="Изменить ФИО", state="*")
 async def admin_change_user_fullname(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_fullnamestart.set()
-    await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+    await message.reply("Введите @username пользователя, которого необходимо отредактировать", reply_markup=types.ReplyKeyboardRemove())
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_fullnamestart)
     users.set(user)
@@ -159,8 +159,8 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         # Отправляем сообщение об успешном обновлении
         await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_fullname}", reply_markup=admue)
         await state.finish()
-        user = users.get(message.chat_id)
         await AdminPanel.change_user_end.set()
+        user = users.get(message.chat_id)
         user.user_state = str(AdminPanel.change_user_end)
         users.set(user)
     else:
@@ -177,7 +177,7 @@ async def admin_change_user_age(message: types.Message, state: FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.change_user_age)
     users.set(user)
-    await message.reply("Введите @username пользователя, которого необходимо отредактировать")
+    await message.reply("Введите @username пользователя, которого необходимо отредактировать", reply_markup=types.ReplyKeyboardRemove())
 
 @dp.message_handler(state=AdminPanel.change_user_age)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
