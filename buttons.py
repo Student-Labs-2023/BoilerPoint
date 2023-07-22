@@ -1,8 +1,4 @@
 from aiogram.types import InlineKeyboardMarkup,InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
-
-
-
-
 #gender buttons
 ikbg = InlineKeyboardMarkup(row_width=2)
 ibm = InlineKeyboardButton(text="Мужчина",callback_data='1')
@@ -35,7 +31,6 @@ backbutton = KeyboardButton(text="Назад в меню")
 confirmbutton.row(confbutton)
 confirmbutton.row(backbutton)
 
-
 #admin buttons
 admrkbm = ReplyKeyboardMarkup(resize_keyboard=True)
 admk_user_editor = KeyboardButton(text="⚙️Изменить пользователя")
@@ -61,6 +56,7 @@ admue.row(admue_back)
 admui = ReplyKeyboardMarkup(resize_keyboard=True)
 admui_back = InlineKeyboardButton(text="Отменить редактирование")
 
+cancel_button = InlineKeyboardButton(text="Отмена", callback_data="cancel")
 
 #rating buttons
 ikbmrating = InlineKeyboardMarkup(row_width=1)
