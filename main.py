@@ -72,15 +72,13 @@ class AdminPanel(StatesGroup):
     rating_board = State()
 
 
-cancel_button = InlineKeyboardButton(text="Отмена", callback_data="cancel")
+
 
 # Хендлер отмены действия через кнопку
 @dp.callback_query_handler(text="cancel", state="*")
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
-    await call.message.edit_reply_markup(reply_markup=None)
-    await state.finish()
-    await call.message.answer("Действие отменено")
-
+    await call.message.answer("Действие отменено, вы вернулись в меню админ-панели.", reply_markup=admrkbm)
+    await AdminPanel.admin_menu.set()
 
 @dp.message_handler(commands=['admin'], state='*')
 async def admin_command(message: types.Message, state: FSMContext):
