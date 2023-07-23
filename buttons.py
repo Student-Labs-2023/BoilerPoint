@@ -40,9 +40,10 @@ admk_event_creation = KeyboardButton(text="🛠️Создать меропри�
 admk_job_creation = KeyboardButton(text="📝Создать задание")
 admk_menu = KeyboardButton(text="⬅️Меню")
 admk_liderboard = KeyboardButton(text="📊Борда")
+admk_promo = KeyboardButton(text="Промокоды")
 admrkbm.row(admk_user_editor)
 admrkbm.row(admk_event_creation)
-admrkbm.row(admk_job_creation)
+admrkbm.row(admk_job_creation,admk_promo)
 admrkbm.row(admk_menu,admk_liderboard)
 
 # admin user editor button
@@ -57,6 +58,14 @@ admue.row(admue_balance_editor)
 admue.row(admue_back)
 admui = ReplyKeyboardMarkup(resize_keyboard=True)
 admui_back = InlineKeyboardButton(text="Отменить редактирование")
+
+#admin promo button
+admpromo = ReplyKeyboardMarkup(resize_keyboard=True)
+admpromo_checkpromo = KeyboardButton(text="Действующие промокоды")
+admpromo_addpromo = KeyboardButton(text="Добавить промокод")
+admpromo.row(admpromo_checkpromo)
+admpromo.row(admpromo_addpromo)
+admpromo.row(admue_back)
 
 cancel_button = InlineKeyboardButton(text="Отмена", callback_data="cancel")
 
