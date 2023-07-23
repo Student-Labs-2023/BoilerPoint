@@ -32,9 +32,26 @@ class SupabaseUserRepository(UserRepository):
                 balance=balance,
                 tgusr = tgusr
             )
-        except Exception as e:
-            print(f"Error get info about user: {chat_id}: {e}")
-            return None
+        except ValueError:
+            tgusr:str = id
+            response = self.client.table(self.table_name).select('full_name','gender','age','balance','chat_id','user_state').eq('tgusr', tgusr).execute()
+            item = response.data[0]
+            user_data = item
+            chat_id = user_data.get('chat_id')
+            pseudo = user_data.get('full_name', 'Unknown')
+            gender = user_data.get('gender', 'Unknown')
+            age = user_data.get('age', 'Unknown')
+            balance = user_data.get('balance')
+            user_state = user_data.get('user_state')
+            return User(
+                chat_id = chat_id,
+                full_name=pseudo,
+                gender=gender,
+                user_state=user_state,
+                age=age,
+                balance=balance,
+                tgusr = tgusr
+            )        
         
     def set(self,user : User) -> None:
         if self.get(user.chat_id):  
@@ -42,7 +59,7 @@ class SupabaseUserRepository(UserRepository):
         else:
             #insert
             self.client.table(self.table_name).insert(user.dict()).execute()
-
+    
     def delete(self,user : User) -> None:
         try:
             if self.get(user.chat_id):
