@@ -73,11 +73,15 @@ class AdminPanel(StatesGroup):
     promo_menu = State()
     promo_check_promocode = State()
     promo_addpromostart = State()
+    promo_addpromousages = State()
+    promo_addpromocost = State()
     promo_addpromoend = State()
+    promo_delpromo = State()
     add_event = State()
     add_task = State()
     backward = State()
     rating_board = State()
+
 
 
 
@@ -261,7 +265,34 @@ async def admin_promocodes_check(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.promo_menu)
 
 
+@dp.message_handler(text ='Добавить промокод',state=AdminPanel.promo_menu)
+async def get_usages(message: types.Message, state: FSMContext):
+    await message.reply("Введите количество использований:", reply_markup=types.ReplyKeyboardRemove())
+    await AdminPanel.promo_addpromousages.set()
 
+
+@dp.message_handler(state=AdminPanel.promo_addpromousages)
+async def get_cost(message: types.Message, state: FSMContext):
+    usages = int(message.text)
+    await message.reply("Введите цену промокода:")
+    await state.update_data(usages=usages)
+    await AdminPanel.promo_addpromocost.set()
+
+
+@dp.message_handler(state=AdminPanel.promo_addpromocost)
+async def create_promo(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    usages = data.get("usages")
+    cost = int(message.text)
+
+    code = generate_code()
+    generate_promo(usages, cost)
+
+    await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан")
+    await state.finish()
+    await AdminPanel.promo_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_menu)
 
 # Хедлер для бека в меню админа
 @dp.message_handler(text="⬅️ к Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])

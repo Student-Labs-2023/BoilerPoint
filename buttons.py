@@ -63,8 +63,9 @@ admui_back = InlineKeyboardButton(text="Отменить редактирова�
 admpromo = ReplyKeyboardMarkup(resize_keyboard=True)
 admpromo_checkpromo = KeyboardButton(text="Действующие промокоды")
 admpromo_addpromo = KeyboardButton(text="Добавить промокод")
+admpromo_delpromo = KeyboardButton(text="Удалить промокод")
 admpromo.row(admpromo_checkpromo)
-admpromo.row(admpromo_addpromo)
+admpromo.row(admpromo_addpromo,admpromo_delpromo)
 admpromo.row(admue_back)
 
 cancel_button = InlineKeyboardButton(text="Отмена", callback_data="cancel")
