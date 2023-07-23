@@ -16,6 +16,7 @@ from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
 from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id, \
     update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
+from codegen import *
 
 load_dotenv()
 
@@ -49,6 +50,8 @@ class MenuStates(StatesGroup):
     calendar = State()
     help = State()
     rating = State()
+    promocode = State()
+    promocodestart = State()
 
 # Состояние удаления профиля
 class ProlfileStates(StatesGroup):
@@ -383,8 +386,67 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "Назад в меню":
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
+    elif select == "Ввести промокод":
+        await MenuStates.promocode.set()
+        await enter_promocode(message)
     else:
         await message.reply("Нет такого варианта выбора!")
+
+
+@dp.message_handler(text="Ввести промокод", state=MenuStates.promocode)
+async def enter_promocode(message: types.Message):
+    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением")
+    await MenuStates.promocodestart.set()
+
+
+@dp.message_handler(state=MenuStates.promocodestart)
+async def check_promocode(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    promocode = message.text
+    poro = promocode
+
+    user = users.get(chat_id)
+    balance = user.balance
+
+    promocode_data = supabase.table('Promocode').select('last', 'cost').eq('promo', promocode).execute()
+
+    if not promocode_data.data:
+        await message.reply("Промокод не найден!")
+        return
+
+    promocode = promocode_data.data[0]
+
+    used_promocode_data = supabase.table('UsedPromocode').select('chat_id').eq('promo', poro).eq('chat_id', chat_id).execute()
+
+    if used_promocode_data.data:
+        # уже использовал
+        await message.reply("Вы уже использовали этот промокод!")
+        return
+
+    if promocode['last'] <= 0:
+        await message.reply("Срок действия промокода истек!")
+        return
+
+    new_balance = balance + promocode['cost']
+
+    new_last = promocode['last'] - 1
+
+    updates = {
+        'balance': new_balance,
+    }
+
+    supabase.table('UsersData').update(updates).eq('chat_id', chat_id).execute()
+
+    # Добавим запись о том, что промокод был использован данным пользователем
+    supabase.table('Promocode').update({'last': new_last}).eq('promo', poro).execute()
+    supabase.table('UsedPromocode').insert({'promo': poro, 'chat_id': str(chat_id)}).execute()
+
+    await message.reply(f"Ваш баланс пополнен на {promocode['cost']}!", reply_markup=rkbm)
+
+    await state.finish()
+    await MenuStates.waiting_for_profile.set()
+
+
 
 @dp.message_handler(text ="📊Рейтинг", state=MenuStates.waiting_for_profile)
 async def user_rating_board(message: types.Message, state: FSMContext):
