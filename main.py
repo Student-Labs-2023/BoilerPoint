@@ -288,11 +288,37 @@ async def create_promo(message: types.Message, state: FSMContext):
     code = generate_code()
     generate_promo(usages, cost)
 
-    await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан")
+    await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан", reply_markup=admpromo)
     await state.finish()
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
+
+@dp.message_handler(text="Удалить промокод", state=AdminPanel.promo_menu)
+async def delete_promo(message: types.Message, state: FSMContext):
+    await AdminPanel.promo_delpromo.set()
+    await message.reply("Введите промокод для удаления", reply_markup=types.ReplyKeyboardRemove())
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_delpromo)
+    users.set(user)
+
+
+@dp.message_handler(state=AdminPanel.promo_delpromo)
+async def delete_promo_handler(message: types.Message, state: FSMContext):
+    code = message.text
+    deleted = supabase.table('Promocode').delete().match({'promo': code}).execute()
+
+    if not deleted.data:
+        # ничего не удалено
+        await message.reply("Промокод не найден", reply_markup=admpromo)
+        return
+
+    # удаление прошло успешно
+    await message.reply(f"Промокод {code} удален")
+    await AdminPanel.promo_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_menu)
+
 
 # Хедлер для бека в меню админа
 @dp.message_handler(text="⬅️ к Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])
