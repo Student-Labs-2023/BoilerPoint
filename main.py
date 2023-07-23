@@ -106,7 +106,7 @@ async def admin_change_user(message: types.Message, state: FSMContext):
         "Вы попали в меню редактирования пользователя, нажмите нужную вам кнопку чтобы изменить параметры пользователя. После нажатия на кнопку введите @username человека в телеграм чтобы поменять его параметры.",
         reply_markup=admue)
 
-@dp.message_handler(text="Изменить баланс", state="*")
+@dp.message_handler(text="Изменить баланс", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_balance(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_balancestart.set()
     await message.reply("Введите @username пользователя, которого необходимо отредактировать", reply_markup=types.ReplyKeyboardRemove())
@@ -138,7 +138,7 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     users.set(user)
     await message.reply(f"Баланс пользователя {username} успешно обновлен на {new_balance}", reply_markup=admue)
 # Хендлер для смены фио через админа
-@dp.message_handler(text="Изменить ФИО", state="*")
+@dp.message_handler(text="Изменить ФИО", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_fullname(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_fullnamestart.set()
     await message.reply("Введите @username пользователя, которого необходимо отредактировать", reply_markup=types.ReplyKeyboardRemove())
@@ -178,7 +178,7 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         users.set(user)
 
 # Хендлер для смены возраста через админ меню
-@dp.message_handler(text="Изменить возраст", state="*")
+@dp.message_handler(text="Изменить возраст", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_age(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_age.set()
     user = users.get(message.chat.id)
