@@ -1,5 +1,4 @@
 import os
-import asyncio
 from dotenv import load_dotenv
 from supabase import Client , create_client
 
