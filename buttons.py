@@ -12,9 +12,11 @@ kliderboard= KeyboardButton(text="📊Рейтинг")
 kschedule= KeyboardButton(text="📆Календарь событий")
 khelp= KeyboardButton(text="❓Помощь")
 kexercise= KeyboardButton(text="📝Задания")
+kpromo = KeyboardButton(text="Ввести промокод")
 rkbm.row(kprofile,kexercise)
 rkbm.add(kschedule)
 rkbm.row(khelp,kliderboard)
+rkbm.add(kpromo)
 
 #profilemenu buttons
 profilebuttons = ReplyKeyboardMarkup(resize_keyboard=True)

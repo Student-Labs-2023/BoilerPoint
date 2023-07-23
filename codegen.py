@@ -30,7 +30,6 @@ def generate_promo(usages, cost):
     data = {
         'promo': code,
         'last': usages,
-        'udict': '1',
         'cost': cost
     }
 
