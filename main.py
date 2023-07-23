@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from aiogram import Bot, types
-from aiogram.utils import executor
+from aiogram.utils import executor , markdown
+from aiogram.utils.markdown import hlink, escape_md
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import os
@@ -69,6 +70,10 @@ class AdminPanel(StatesGroup):
     change_user_agestart = State()
     change_user_balance = State()
     change_user_balancestart = State()
+    promo_menu = State()
+    promo_check_promocode = State()
+    promo_addpromostart = State()
+    promo_addpromoend = State()
     add_event = State()
     add_task = State()
     backward = State()
@@ -222,10 +227,44 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         await state.finish()
         await AdminPanel.change_user_end.set()
 
-  
+# Хендлер для входа в меню промокодов
+@dp.message_handler(text="Промокоды", state=AdminPanel.admin_menu)
+async def admin_promocodes(message: types.Message, state: FSMContext):
+    await AdminPanel.promo_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_menu)
+    users.set(user)
+    await message.reply("Вы вошли в меню промокодов", reply_markup=admpromo)
+
+
+@dp.message_handler(text="Действующие промокоды", state=AdminPanel.promo_menu)
+async def admin_promocodes_check(message: types.Message, state: FSMContext):
+    await AdminPanel.promo_check_promocode.set()
+    chat_id = message.chat.id
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_check_promocode)
+
+    promos = supabase.table('Promocode').select('promo', 'last', 'cost').filter('last', 'gt', 0).order('cost', desc=True).execute()
+
+    promo_text = "📝 Действующие промокоды:\n\n"
+
+    for promo in promos.data:
+        code = promo['promo']
+        uses_left = promo['last']
+        cost = promo['cost']
+
+        promo_text += escape_md(f"{code} - {uses_left} исп., {cost} поинтов\n")
+
+    await bot.send_message(chat_id, promo_text, parse_mode="MarkdownV2", reply_markup=admpromo)
+    await state.finish()
+    await AdminPanel.promo_menu.set()
+    user.user_state = str(AdminPanel.promo_menu)
+
+
+
 
 # Хедлер для бека в меню админа
-@dp.message_handler(text="⬅️ к Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
+@dp.message_handler(text="⬅️ к Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])
 async def admin_backtomenu(message: types.Message, state: FSMContext):
     await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
     await AdminPanel.admin_menu.set()
