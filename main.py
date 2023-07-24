@@ -98,7 +98,7 @@ class AdminPanel(StatesGroup):
 
 
 # Хендлер отмены действия через кнопку
-@dp.callback_query_handler(text="cancel", state="*")
+@dp.callback_query_handler(text="cancel", state=[AdminPanel.change_user_balance,AdminPanel.change_user_fullname,AdminPanel.change_user_agestart])
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню админ-панели.", reply_markup=admrkbm)
     await AdminPanel.admin_menu.set()
