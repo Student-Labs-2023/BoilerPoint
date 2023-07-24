@@ -314,7 +314,7 @@ async def delete_promo_handler(message: types.Message, state: FSMContext):
         return
 
     # удаление прошло успешно
-    await message.reply(f"Промокод {code} удален")
+    await message.reply(f"Промокод {code} удален", reply_markup=admpromo)
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
