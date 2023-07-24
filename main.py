@@ -508,6 +508,10 @@ async def check_promocode(message: types.Message, state: FSMContext):
 
     if not promocode_data.data:
         await message.reply("Промокод не найден!")
+        await state.finish()
+        await MenuStates.waiting_for_profile.set()
+        user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+        users.set(user)
         return
 
     promocode = promocode_data.data[0]
@@ -517,10 +521,18 @@ async def check_promocode(message: types.Message, state: FSMContext):
     if used_promocode_data.data:
         # уже использовал
         await message.reply("Вы уже использовали этот промокод!")
+        await state.finish()
+        await MenuStates.waiting_for_profile.set()
+        user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+        users.set(user)
         return
 
     if promocode['last'] <= 0:
         await message.reply("Срок действия промокода истек!")
+        await state.finish()
+        await MenuStates.waiting_for_profile.set()
+        user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+        users.set(user)
         return
 
     new_balance = balance + promocode['cost']
@@ -541,6 +553,8 @@ async def check_promocode(message: types.Message, state: FSMContext):
 
     await state.finish()
     await MenuStates.waiting_for_profile.set()
+    user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+    users.set(user)
 
 
 
