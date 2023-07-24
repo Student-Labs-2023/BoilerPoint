@@ -526,7 +526,7 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
 
 
 
-@dp.callback_query_handler(text="cancel_user", state="*")
+@dp.callback_query_handler(text="cancel_user", state=[ProlfileStates.edit_profile_name, ProlfileStates.edit_profile_age])
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
     await ProlfileStates.edit_profile.set()
