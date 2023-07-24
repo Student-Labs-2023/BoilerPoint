@@ -290,8 +290,7 @@ async def create_promo(message: types.Message, state: FSMContext):
     usages = data.get("usages")
     cost = int(message.text)
 
-    code = generate_code()
-    generate_promo(usages, cost)
+    code = generate_promo(usages, cost)
 
     await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан", reply_markup=admpromo)
     await state.finish()
