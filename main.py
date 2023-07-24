@@ -235,7 +235,7 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         await AdminPanel.change_user_end.set()
 
 # Хендлер для входа в меню промокодов
-@dp.message_handler(text="Промокоды", state=AdminPanel.admin_menu)
+@dp.message_handler(text="🗝️Промокоды", state=AdminPanel.admin_menu)
 async def admin_promocodes(message: types.Message, state: FSMContext):
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
@@ -324,7 +324,7 @@ async def delete_promo_handler(message: types.Message, state: FSMContext):
 
 
 # Хедлер для бека в меню админа
-@dp.message_handler(text="⬅️ к Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])
+@dp.message_handler(text="⬅️Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])
 async def admin_backtomenu(message: types.Message, state: FSMContext):
     await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
     await AdminPanel.admin_menu.set()
@@ -340,7 +340,7 @@ async def admin_menu_back(message: types.Message, state: FSMContext):
     users.set(user)
     await message.reply("Вы вышли из панели администратора", reply_markup=rkbm)
 
-@dp.message_handler(text="📊Борда", state=AdminPanel.admin_menu)
+@dp.message_handler(text="📊Рейтинг", state=AdminPanel.admin_menu)
 async def admin_rating_board(message: types.Message, state: FSMContext):
     await AdminPanel.rating_board.set()
     user = users.get(message.chat.id)
@@ -474,18 +474,18 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "📝Задания":
         await MenuStates.tasks.set()
         await handle_tasks(message, state)
-    elif select == "Удалить профиль ❌":
+    elif select == "❌Удалить профиль":
         await bot.send_message(chat_id, "Вы действительно хотите удалить свой профиль?", reply_markup=confirmbutton)
-    elif select == "Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
+    elif select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
         await ProlfileStates.delete_profile.set()
         await del_profile(message, state)
-    elif select == "Назад в меню":
+    elif select == "⬅️Назад в меню":
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
     elif select == "⚙️Редактировать профиль":
         await ProlfileStates.edit_profile.set()
         await bot.send_message(chat_id, "Выберите какие данные хотите отредактировать! ", reply_markup=menuedit)
-    elif select == "Ввести промокод":
+    elif select == "🗝️Ввести промокод":
         await MenuStates.promocode.set()
         await enter_promocode(message)
     else:
@@ -501,7 +501,7 @@ async def handle_waiting_for_edit_profile(message: types.Message, state: FSMCont
     elif select == "Изменить возраст":    
         await ProlfileStates.edit_profile_age.set()
         await bot.send_message(chat_id, "Введите новый возраст ", reply_markup=backbutt)
-    elif select == "Назад в меню":
+    elif select == "⬅️Назад в меню":
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
     else:
@@ -542,7 +542,7 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
         await state.finish()
         await MenuStates.waiting_for_profile.set()
 
-@dp.message_handler(text="Ввести промокод", state=MenuStates.promocode)
+@dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
     await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением")
     await MenuStates.promocodestart.set()
