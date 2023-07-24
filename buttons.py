@@ -84,6 +84,11 @@ admpromo.row(admue_back)
 
 cancel_button = InlineKeyboardButton(text="❌Отмена", callback_data="cancel")
 
+# Отмена редактирования для юзера
+cancel_button_for_user = InlineKeyboardMarkup(row_width=1)
+cancel_abob = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user")
+cancel_button_for_user.add(cancel_abob)
+
 #rating buttons
 ikbmrating = InlineKeyboardMarkup(row_width=1)
 ibrating = InlineKeyboardButton(text="📊Полный рейтинг",url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQFzN5HRvQhS5j4kDcv9wWH3uucCqp1AFmu2ErZYikmmJSshj1f16v7ry013vde0y6OYVWeSsVtgaKT/pubhtml?gid=0&single=true')
