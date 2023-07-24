@@ -35,4 +35,5 @@ def generate_promo(usages, cost):
 
     supabase.table(table_name).insert(data).execute()
     print(f"Added {code} with {usages} usages and {cost} cost to {table_name} table")
+    return code
 
