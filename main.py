@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 from aiogram import Bot, types
+from io import BytesIO
+import qrcode
 import random
 import string
 from aiogram.utils import executor , markdown
@@ -83,6 +85,9 @@ class AdminPanel(StatesGroup):
     promo_addpromocost = State()
     promo_addpromoend = State()
     promo_delpromo = State()
+    promo_qr = State()
+    promo_qrstart = State()
+    promo_qrend = State()
     add_event = State()
     add_task = State()
     backward = State()
@@ -245,6 +250,43 @@ async def admin_promocodes(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.promo_menu)
     users.set(user)
     await message.reply("Вы вошли в меню промокодов", reply_markup=admpromo)
+
+@dp.message_handler(text="Добавить QR", state=AdminPanel.promo_menu)
+async def admin_promocodes_addqr(message: types.Message, state: FSMContext):
+    await AdminPanel.promo_qrstart.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_qrstart)
+    users.set(user)
+    await message.reply("Введите промокод, который хотите помстить в QR-код", reply_markup=types.ReplyKeyboardRemove())
+
+@dp.message_handler(state=AdminPanel.promo_qrstart)
+async def admin_promocodes_add_qr_set(message: types.Message, state: FSMContext):
+    promo_code = message.text
+    promocode_data = supabase.table('Promocode').select('cost').eq('promo', promo_code).execute()
+
+    if not promocode_data.data or promocode_data.data[0]['cost'] == 0:
+        await message.reply("Такого промокода не существует или лимит его использования исчерпан", reply_markup=admpromo)
+        await state.finish()
+        await AdminPanel.promo_menu.set()
+        return
+
+    qr = qrcode.make(promo_code)
+
+    byte_io = BytesIO()
+    qr.save(byte_io, 'PNG')
+    byte_io.seek(0)
+
+    await message.reply_photo(byte_io, caption="Вот QR-код для промокода " + promo_code , reply_markup=admpromo)
+
+    byte_io.close()
+
+    await state.finish()
+    await AdminPanel.promo_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_menu)
+
+
+
 
 
 @dp.message_handler(text="Действующие промокоды", state=AdminPanel.promo_menu)
