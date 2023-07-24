@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 from aiogram import Bot, types
+import random
+import string
 from aiogram.utils import executor , markdown
 from aiogram.utils.markdown import hlink, escape_md
 from aiogram.dispatcher import Dispatcher, FSMContext
@@ -600,7 +602,8 @@ async def check_promocode(message: types.Message, state: FSMContext):
 
     # Добавим запись о том, что промокод был использован данным пользователем
     supabase.table('Promocode').update({'last': new_last}).eq('promo', poro).execute()
-    supabase.table('UsedPromocode').insert({'promo': poro, 'chat_id': str(chat_id)}).execute()
+    expression = ''.join(random.choices(string.ascii_letters, k=8))
+    supabase.table('UsedPromocode').insert({'id' : expression,'promo': poro, 'chat_id': str(chat_id)}).execute()
 
     await message.reply(f"Ваш баланс пополнен на {promocode['cost']}!", reply_markup=rkbm)
 
