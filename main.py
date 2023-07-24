@@ -490,7 +490,7 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
         await MenuStates.promocode.set()
         await enter_promocode(message)
     else:
-        await message.reply("Нет такого варианта выбора!")
+        await message.reply("Нет такого варианта выбора!", reply_markup=rkbm)
 
 # Хендлер отмены действия через кнопку
 @dp.callback_query_handler(text="cancel_user", state="*")
