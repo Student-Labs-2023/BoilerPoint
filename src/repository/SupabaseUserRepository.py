@@ -51,7 +51,10 @@ class SupabaseUserRepository(UserRepository):
                 age=age,
                 balance=balance,
                 tgusr = tgusr
-            )        
+            )
+        except Exception as e:
+            print(f"Error get info about user: {chat_id}: {e}")
+            return None
         
     def set(self,user : User) -> None:
         if self.get(user.chat_id):  
