@@ -58,6 +58,7 @@ class MenuStates(StatesGroup):
 
 # Состояние удаления профиля
 class ProlfileStates(StatesGroup):
+    profile_menu_main_state = State()
     delete_profile = State()
     edit_profile = State()
     edit_profile_name = State()
@@ -475,24 +476,14 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "📝Задания":
         await MenuStates.tasks.set()
         await handle_tasks(message, state)
-    elif select == "❌Удалить профиль":
-        await bot.send_message(chat_id, "Вы действительно хотите удалить свой профиль?", reply_markup=confirmbutton)
-    elif select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
-        await ProlfileStates.delete_profile.set()
-        await del_profile(message, state)
-    elif select == "⬅️Назад в меню":
-        await MenuStates.waiting_for_profile.set()
-        await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
-    elif select == "⚙️Редактировать профиль":
-        await ProlfileStates.edit_profile.set()
-        await bot.send_message(chat_id, "Выберите какие данные хотите отредактировать! ", reply_markup=menuedit)
     elif select == "🗝️Ввести промокод":
         await MenuStates.promocode.set()
         await enter_promocode(message)
     else:
         await message.reply("Нет такого варианта выбора!", reply_markup=rkbm)
 
-# Хендлер отмены действия через кнопку
+
+
 @dp.callback_query_handler(text="cancel_user", state="*")
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
@@ -656,19 +647,33 @@ async def handle_profile(message: types.Message, state: FSMContext):
                           f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
 
         await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message, reply_markup=profilebuttons)
+    # Обработчик нажатия на кнопку удалить профиль
+    elif select == "❌Удалить профиль":
+        await bot.send_message(chat_id, "Вы действительно хотите удалить свой профиль?", reply_markup=confirmbutton)
+        await ProlfileStates.delete_profile.set()
+    elif select == "⚙️Редактировать профиль":
+        await ProlfileStates.edit_profile.set()
+        await bot.send_message(chat_id, "Выберите какие данные хотите отредактировать! ", reply_markup=menuedit)
+    elif select == "⬅️Назад в меню":
+        await MenuStates.waiting_for_profile.set()
+        await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+    
     else:
         await bot.send_message(chat_id, "Некорректный выбор.")
-    await MenuStates.waiting_for_profile.set()
-
-# Обработчик нажатия на кнопку удалить профиль
+    
 @dp.message_handler(state=ProlfileStates.delete_profile)
 async def del_profile(message: types.Message, state: FSMContext):
+    select = message.text
     chat_id = message.chat.id
-    user = users.get(chat_id)
-    users.delete(user)
-    await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
-    await state.finish()
-
+    if select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
+        user = users.get(chat_id)
+        users.delete(user)
+        await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
+        await state.finish()
+    elif select == "⬅️Назад в меню":
+        await MenuStates.waiting_for_profile.set()
+        await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+    
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
