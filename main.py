@@ -57,6 +57,9 @@ class MenuStates(StatesGroup):
 # Состояние удаления профиля
 class ProlfileStates(StatesGroup):
     delete_profile = State()
+    edit_profile = State()
+    edit_profile_name = State()
+    edit_profile_age = State()
 
 # Состояния админ-панели
 class AdminPanel(StatesGroup):
@@ -479,15 +482,65 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "Назад в меню":
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
-    elif select == "Назад в меню":
-        await MenuStates.waiting_for_profile.set()
-        await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
+    elif select == "⚙️Редактировать профиль":
+        await ProlfileStates.edit_profile.set()
+        await bot.send_message(chat_id, "Выберите какие данные хотите отредактировать! ", reply_markup=menuedit)
     elif select == "Ввести промокод":
         await MenuStates.promocode.set()
         await enter_promocode(message)
     else:
         await message.reply("Нет такого варианта выбора!")
 
+@dp.message_handler(state=ProlfileStates.edit_profile)
+async def handle_waiting_for_edit_profile(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    select = message.text
+    if select == "Изменить ФИО":
+        await ProlfileStates.edit_profile_name.set()
+        await bot.send_message(chat_id, "Введите новое ФИО ", reply_markup=backbutt)
+    elif select == "Изменить возраст":    
+        await ProlfileStates.edit_profile_age.set()
+        await bot.send_message(chat_id, "Введите новый возраст ", reply_markup=backbutt)
+    elif select == "Назад в меню":
+        await MenuStates.waiting_for_profile.set()
+        await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
+    else:
+        await message.reply("Нет такого варианта выбора!")
+
+@dp.message_handler(state=ProlfileStates.edit_profile_name)
+async def edit_name_profile(message: types.Message, state:FSMContext):
+    new_fullname = message.text  
+    chat_id = message.chat.id
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40:
+        user = users.get(chat_id)
+        user.full_name = new_fullname
+        user.user_state = str(ProlfileStates.edit_profile_name)
+        users.set(user)
+        await message.reply(f"Имя успешно обновлено на :{new_fullname}", reply_markup=rkbm)
+        await state.finish()
+        await MenuStates.waiting_for_profile.set()
+
+@dp.message_handler(state=ProlfileStates.edit_profile_age)
+async def edit_age_profile(message: types.Message, state: FSMContext):
+    new_age = message.text  # получаем новый возраст
+    try:
+        new_age = int(new_age)
+    except ValueError as e:
+        await message.reply("Ваш возраст неккоректен. Возраст не должен содержать буквы!")
+        print(f"Error validation age{e}")
+    if new_age < 12 or new_age > 122:
+        await message.reply("Ваш возраст неккоректен. Возраст должен лежать в диапазоне от 12 - 122")
+        await ProlfileStates.edit_profile_age.set()
+    else:
+        chat_id = message.chat.id
+        user = users.get(chat_id)
+        user.age = new_age
+        user.user_state = str(ProlfileStates.edit_profile_age)
+        users.set(user)
+        # Отправляем сообщение об успешном обновлении
+        await message.reply(f"Возраст успешно обновлен на {new_age}", reply_markup=rkbm)
+        await state.finish()
+        await MenuStates.waiting_for_profile.set()
 
 @dp.message_handler(text="Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):

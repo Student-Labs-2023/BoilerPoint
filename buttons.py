@@ -20,16 +20,30 @@ rkbm.add(kpromo)
 
 #profilemenu buttons
 profilebuttons = ReplyKeyboardMarkup(resize_keyboard=True)
-delprofile = KeyboardButton(text="Удалить профиль ❌")
+delprofile = KeyboardButton(text="❌Удалить профиль")
 profilebuttons.row(delprofile)
-backtomenubutton = KeyboardButton(text="Назад в меню")
+editbutton = ReplyKeyboardMarkup(resize_keyboard=True)
+edbutton = KeyboardButton(text="⚙️Редактировать профиль")
+profilebuttons.row(edbutton)
+backtomenubutton = KeyboardButton(text="⬅️Назад в меню")
 profilebuttons.row(backtomenubutton)
+#confirm delete button and edit button + back button to profile
+back = ReplyKeyboardMarkup(resize_keyboard=True)
+backbutt = KeyboardButton(text="Назад в меню")
+back.row(backbutt)
 
-#confirm delete button and back button to profile
+menuedit = ReplyKeyboardMarkup(resize_keyboard=True)
+editname = KeyboardButton(text="Изменить ФИО")
+editage = KeyboardButton(text="Изменить возраст")
+menuedit.row(editname)
+menuedit.row(editage)
+menuedit.row(backbutt)
+
+
+
 confirmbutton = ReplyKeyboardMarkup(resize_keyboard=True)
 confbutton = KeyboardButton(text="Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.")
 backbutton = KeyboardButton(text="Назад в меню")
-
 confirmbutton.row(confbutton)
 confirmbutton.row(backbutton)
 
