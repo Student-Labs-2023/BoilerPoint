@@ -492,16 +492,24 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     else:
         await message.reply("Нет такого варианта выбора!")
 
+# Хендлер отмены действия через кнопку
+@dp.callback_query_handler(text="cancel_user", state="*")
+async def cancel_action(call: types.CallbackQuery, state: FSMContext):
+    await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
+    await ProlfileStates.edit_profile.set()
+
 @dp.message_handler(state=ProlfileStates.edit_profile)
 async def handle_waiting_for_edit_profile(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
     if select == "Изменить ФИО":
         await ProlfileStates.edit_profile_name.set()
-        await bot.send_message(chat_id, "Введите новое ФИО ", reply_markup=backbutt)
+        await bot.send_message(chat_id, "Вы выбрали редактирование ФИО", reply_markup=types.ReplyKeyboardRemove())
+        await bot.send_message(chat_id, "Введите новое ФИО ", reply_markup=cancel_button_for_user)
     elif select == "Изменить возраст":    
         await ProlfileStates.edit_profile_age.set()
-        await bot.send_message(chat_id, "Введите новый возраст ", reply_markup=backbutt)
+        await bot.send_message(chat_id, "Вы выбрали редактирование возраста", reply_markup=types.ReplyKeyboardRemove())
+        await bot.send_message(chat_id, "Введите новый возраст ", reply_markup=cancel_button_for_user)
     elif select == "⬅️Назад в меню":
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Вы вышли в меню! ", reply_markup=rkbm)
@@ -517,7 +525,7 @@ async def edit_name_profile(message: types.Message, state:FSMContext):
         user.full_name = new_fullname
         user.user_state = str(ProlfileStates.edit_profile_name)
         users.set(user)
-        await message.reply(f"Имя успешно обновлено на :{new_fullname}", reply_markup=rkbm)
+        await message.reply(f"Имя успешно обновлено на : {new_fullname}", reply_markup=rkbm)
         await state.finish()
         await MenuStates.waiting_for_profile.set()
 
