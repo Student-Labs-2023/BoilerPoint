@@ -48,6 +48,8 @@ aiogram - https://aiogram.readthedocs.io/_/downloads/en/latest/pdf/
 
 schedule - https://schedule.readthedocs.io/en/stable/installation.html
 
+qrcode - https://pypi.org/project/qrcode/
+
 
 # Start Jelezyaka 
 
