@@ -54,6 +54,8 @@ class MenuStates(StatesGroup):
     tasks = State()
     calendar = State()
     help = State()
+    help_start = State()
+    help_end = State()
     rating = State()
     promocode = State()
     promocodestart = State()
@@ -531,6 +533,11 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
     await ProlfileStates.edit_profile.set()
 
+@dp.callback_query_handler(text="cancel_user_help", state=MenuStates.help_end)
+async def cancel_action(call: types.CallbackQuery, state: FSMContext):
+    await call.message.answer("Действие отменено, вы вернулись в меню помощи.", reply_markup=userhelp)
+    await MenuStates.help.set()
+
 @dp.message_handler(state=ProlfileStates.edit_profile)
 async def handle_waiting_for_edit_profile(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -730,11 +737,74 @@ async def handle_calendar(message: types.Message, state: FSMContext):
 async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
-    await bot.send_message(chat_id, f"Привет! \n Наши разработчики размышляют над тем, что сюда написать. \n Мы находимся в раздумьях над нашей системой геймификации. \n Очень скоро тут что-то появится ! \n Если тебе есть что предложить, \n то мы ждём тебя с твоим предложением в чате Studen Labs ! ")
+    await bot.send_message(chat_id, f"Привет! Если у тебя есть какие-то проблемы или пожелания , то смелее нажимай на кнопку '📨Создать заявку' и администратор с радостью тебе поможет! ", reply_markup=userhelp)
     user = users.get(chat_id)
     user.user_state = str(MenuStates.help)
     users.set(user)
+    await MenuStates.help_start.set()
+    user.user_state = str(MenuStates.help_start)
+
+
+@dp.message_handler(text="📨Создать заявку", state=MenuStates.help_start)
+async def handle_help_start(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    tgu = message.from_user.username
+    tgus = '@' + tgu
+
+    # Проверяем, есть ли у пользователя предыдущие заявки
+    existing_reports = supabase.table('Report').select('tgusr').eq('tgusr', tgus).execute()
+    if existing_reports.data:
+        await message.reply("У вас уже есть открытая заявка. Пожалуйста, дождитесь ответа.", reply_markup=rkbm)
+        await state.finish()
+        await MenuStates.waiting_for_profile.set()
+
+        user = users.get(chat_id)
+        user.user_state = str(MenuStates.help)
+        users.set(user)
+
+        return
+
+    await bot.send_message(chat_id, "Нажата кнопка создать заявку", reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(chat_id, "Распишите здесь наиподробнейшим образом какой у вас возник вопрос или пожелание!",reply_markup=cancel_button_for_user_help)
+
+    user = users.get(chat_id)
+    user.user_state = str(MenuStates.help_end)
+    await MenuStates.help_end.set()
+
+@dp.message_handler(state=MenuStates.help_end)
+async def handle_help_end(message: types.Message, state: FSMContext):
+    try:
+        Description = message.text
+        chat_id = message.chat.id
+        telegram_name = message.from_user.username
+        tgusr = telegram_name
+        if telegram_name == None:
+            await bot.send_message(chat_id, "У вас нет имени пользователя телеграм!Укажите его в своём профиле и тогда администрация сможет вам помочь.", reply_markup=userhelp)
+            await MenuStates.help.set()
+
+        else:
+            tgusr = "@" + telegram_name
+
+        # Вставка в БД
+        supabase.table('Report').insert({'description': Description, 'tgusr': tgusr}).execute()
+
+        # Подтверждающее сообщение
+        await bot.send_message(chat_id, "Заявка успешно отправлена! В ближайшее время с вами свяжется администратор.", reply_markup=userhelp)
+
+    except:
+        chat_id = message.chat.id
+        await bot.send_message(chat_id, "Извините, произошла ошибка при отправке заявки", reply_markup=userhelp)
+
+    # Сброс состояния
+    await state.finish()
+    await MenuStates.help.set()
+    users.user_state=str(MenuStates.help)
+
+@dp.message_handler(text = "⬅️Назад в меню", state=[MenuStates.help,MenuStates.help_start])
+async def handle_help_back(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
     await MenuStates.waiting_for_profile.set()
+    await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
 
 @dp.message_handler(state=MenuStates.tasks)
 async def handle_tasks(message: types.Message, state: FSMContext):
