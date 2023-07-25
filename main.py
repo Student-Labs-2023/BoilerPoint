@@ -94,6 +94,11 @@ class AdminPanel(StatesGroup):
     add_task = State()
     backward = State()
     rating_board = State()
+    ticket = State()
+    ticket_check = State()
+    ticket_start = State()
+    ticket_middle = State()
+    ticket_end = State()
 
 
 
@@ -805,6 +810,48 @@ async def handle_help_back(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     await MenuStates.waiting_for_profile.set()
     await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+
+@dp.message_handler(text = "Обращения", state = AdminPanel.admin_menu)
+async def handle_report(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    await bot.send_message(chat_id, "Нажата кнопка обращений", reply_markup=admreport)
+    await AdminPanel.ticket.set()
+    user = users.get(chat_id)
+    user.user_state = str(AdminPanel.ticket)
+
+
+@dp.message_handler(text='Действующие обращения', state=AdminPanel.ticket)
+async def check_tickets(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    user = users.get(chat_id)
+    user.user_state = str(AdminPanel.ticket_check)
+
+    # Запрос обращений из БД
+    tickets = supabase.table('Report').select('tgusr', 'description').execute().data
+
+    tickets_text = "📨 Действующие обращения:\n\n"
+
+    for i, ticket in enumerate(tickets, 1):
+        username = ticket['tgusr']
+        description = ticket['description']
+        tickets_text += f"{i}. {username} - {description}\n"
+
+    # Отправка сообщения
+    await bot.send_message(chat_id, tickets_text)
+
+    # Смена состояния
+    await AdminPanel.ticket.set()
+    user.user_state = str(AdminPanel.ticket)
+
+
+
+@dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.ticket)
+async def handle_tickets_back(message: types.Message, state: FSMContext):
+    await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
+    await AdminPanel.admin_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.admin_menu)
+    users.set(user)
 
 @dp.message_handler(state=MenuStates.tasks)
 async def handle_tasks(message: types.Message, state: FSMContext):
