@@ -55,10 +55,21 @@ admk_job_creation = KeyboardButton(text="📝Создать задание")
 admk_menu = KeyboardButton(text="⬅️Меню")
 admk_liderboard = KeyboardButton(text="📊Рейтинг")
 admk_promo = KeyboardButton(text="🗝️Промокоды")
+admk_ticket = KeyboardButton(text="Обращения")
 admrkbm.row(admk_user_editor)
 admrkbm.row(admk_event_creation)
 admrkbm.row(admk_job_creation,admk_promo)
 admrkbm.row(admk_menu,admk_liderboard)
+admrkbm.row(admk_ticket)
+
+# admin report keyboard
+admreport = ReplyKeyboardMarkup(resize_keyboard=True)
+admreport_check = KeyboardButton(text="Действующие обращения")
+admreport_del = KeyboardButton(text="Удалить обращение")
+admreport_back = KeyboardButton(text="⬅️Назад в меню")
+admreport.row(admreport_check)
+admreport.row(admreport_del)
+admreport.row(admreport_back)
 
 #User help button
 userhelp = ReplyKeyboardMarkup(resize_keyboard=True)
