@@ -60,6 +60,13 @@ admrkbm.row(admk_event_creation)
 admrkbm.row(admk_job_creation,admk_promo)
 admrkbm.row(admk_menu,admk_liderboard)
 
+#User help button
+userhelp = ReplyKeyboardMarkup(resize_keyboard=True)
+userhelp_back = KeyboardButton(text="⬅️Назад в меню")
+userhelp_ticket = KeyboardButton(text="📨Создать заявку")
+userhelp.row(userhelp_ticket)
+userhelp.row(userhelp_back)
+
 # admin user editor button
 admue = ReplyKeyboardMarkup(resize_keyboard=True)
 admue_fullname_editor = KeyboardButton(text="Изменить ФИО")
@@ -90,6 +97,11 @@ cancel_button = InlineKeyboardButton(text="❌Отмена", callback_data="canc
 cancel_button_for_user = InlineKeyboardMarkup(row_width=1)
 cancel_abob = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user")
 cancel_button_for_user.add(cancel_abob)
+
+cancel_button_for_user_help = InlineKeyboardMarkup(row_width=1)
+cancel_helper = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user_help")
+cancel_button_for_user_help.add(cancel_helper)
+
 
 #rating buttons
 ikbmrating = InlineKeyboardMarkup(row_width=1)
