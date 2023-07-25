@@ -502,7 +502,7 @@ async def handle_name(message: types.Message, state: FSMContext):
             await bot.send_message(chat_id, f"Регистрация успешно завершена, {user.full_name}!", reply_markup=rkbm)
 
         await state.finish()
-        await MenuStates.profile.set()
+        await MenuStates.waiting_for_profile.set()
     else:
         await bot.send_message(chat_id, f"Пожалуйста, введите корректно свое ФИО")
         await RegistrationStates.waiting_for_name.set()
