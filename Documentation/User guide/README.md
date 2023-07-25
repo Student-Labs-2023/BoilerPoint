@@ -40,5 +40,17 @@
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/e1177aac-8f8b-4adf-a18b-d08f1cbf7f72)
 
 
+## Кнопка  "Удалить профиль" в клавиатуре профиля 
+
+- Эта кнопка предназначена для удаления вашего профиля. Так выглядит процедура удаления профиля. Пошагово
+
+
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/8f89daf2-9c02-411f-be87-5d86093cb380)
+
+
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/854af315-ef90-4932-ac5c-c5ac2df18f49)
+
+
+
 
 
