@@ -96,6 +96,7 @@ class AdminPanel(StatesGroup):
     rating_board = State()
     ticket = State()
     ticket_check = State()
+    ticket_delete = State()
     ticket_start = State()
     ticket_middle = State()
     ticket_end = State()
@@ -843,6 +844,38 @@ async def check_tickets(message: types.Message, state: FSMContext):
     await AdminPanel.ticket.set()
     user.user_state = str(AdminPanel.ticket)
 
+@dp.message_handler(text = "Удалить обращение", state=AdminPanel.ticket)
+async def delete_ticket(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    await AdminPanel.ticket_delete.set()
+    user = users.get(chat_id)
+    user.user_state = str(AdminPanel.ticket_delete)
+    await message.reply("Введите @username пользователя чтобы удалить его заявку", reply_markup=types.ReplyKeyboardRemove())
+    await AdminPanel.ticket_start.set()
+    user.user_state = str(AdminPanel.ticket_delete)
+
+
+@dp.message_handler(state=AdminPanel.ticket_start)
+async def handle_ticket_delete(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    username = message.text
+
+    # Проверка, есть ли такой пользователь
+    user_exists = supabase.table('Report').select('tgusr').eq('tgusr', username).execute()
+
+    if not user_exists.data:
+        await message.reply("Такого пользователя нет в базе данных", reply_markup= admreport)
+        await state.finish()
+        await AdminPanel.ticket.set()
+        return
+
+    # Удаление обращения
+    delete_query = supabase.table('Report').delete().eq('tgusr', username).execute()
+
+    await message.reply(f"Обращение пользователя {username} успешно удалено", reply_markup=admreport)
+    await AdminPanel.ticket.set()
+    user = users.get(chat_id)
+    user.user_state = str(AdminPanel.ticket)
 
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.ticket)
