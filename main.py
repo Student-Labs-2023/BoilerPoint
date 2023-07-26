@@ -571,6 +571,12 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
         await MenuStates.help.set()
         await handle_help(message, state)
     elif select == "📝Задания":
+        counter_data = supabase.table('Pointer').select('chat_id').eq('chat_id', chat_id).execute()
+        if not counter_data.data:
+            supabase.table('Pointer').insert({'chat_id': chat_id, 'counter': 0}).execute()
+        else:
+
+            supabase.table('Pointer').update({'counter': 0}).eq('chat_id', chat_id).execute()
         await MenuStates.tasks.set()
         await handle_tasks(message, state)
     elif select == "🗝️Ввести промокод":
@@ -948,15 +954,58 @@ async def handle_tickets_back(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
 
+#-----------------------------------------------------------------------------------------------------------------------
+#Система заданий
+#-----------------------------------------------------------------------------------------------------------------------
+
 @dp.message_handler(state=MenuStates.tasks)
 async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    select = message.text
-    await bot.send_message(chat_id, f"Нажата кнопка задания")
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
+    counter = counter.data[0]['counter']
+    print(counter)
+    task = supabase.table('AdminTasks').select('name','description').eq('counter', counter).execute().data[0]
+    print(task)
+    text = f"{counter}.{task['name']}\n{task['description']}"
+    await bot.send_message(chat_id, text, reply_markup= ikbmtasks)
+
     user = users.get(chat_id)
     user.user_state = str(MenuStates.tasks)
     users.set(user)
     await MenuStates.waiting_for_profile.set()
+
+@dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile)
+async def right(call: types.CallbackQuery, state: FSMContext):
+    chat_id = call.message.chat.id
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
+    counter = counter.data[0]['counter'] + 1
+    if counter>supabase.table('AdminTasks').select('counter' ).order('counter', desc = True).limit(1).execute().data[0]['counter']:
+        counter = 0
+    supabase.table('Pointer').update({'counter' : counter}).eq('chat_id', chat_id).execute()
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
+    await handle_tasks(call.message, state)
+
+@dp.callback_query_handler(text="left", state=MenuStates.waiting_for_profile)
+async def left(call: types.CallbackQuery, state: FSMContext):
+    chat_id = call.message.chat.id
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
+    counter = counter.data[0]['counter'] - 1
+    if counter<0:
+        counter = supabase.table('AdminTasks').select('counter' ).order('counter', desc = True).limit(1).execute().data[0]['counter']
+    supabase.table('Pointer').update({'counter' : counter}).eq('chat_id', chat_id).execute()
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
+    await handle_tasks(call.message, state)
+
+@dp.callback_query_handler(text="go", state=MenuStates.waiting_for_profile)
+async def go(call: types.CallbackQuery, state: FSMContext):
+    chat_id = call.message.chat.id
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
+    counter = counter.data[0]['counter']
+    print(counter)
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Система заданий
+#-----------------------------------------------------------------------------------------------------------------------
 
 # Ответ на отправку стикера
 @dp.message_handler(content_types=types.ContentType.STICKER, state="*")
