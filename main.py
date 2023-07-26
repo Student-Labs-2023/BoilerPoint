@@ -704,8 +704,8 @@ async def check_promocode(message: types.Message, state: FSMContext):
 
     new_last = promocode['last'] - 1
 
-    supabase.table('UsersData').update({'balance': new_balance}).eq('chat_id', chat_id).execute()
-
+    
+    user.balance = new_balance
     # Добавим запись о том, что промокод был использован данным пользователем
     supabase.table('Promocode').update({'last': new_last}).eq('promo', poro).execute()
     expression = ''.join(random.choices(string.ascii_letters, k=8))
@@ -716,6 +716,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
     await state.finish()
     await MenuStates.waiting_for_profile.set()
     user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+    users.set(user)
     
 
 
