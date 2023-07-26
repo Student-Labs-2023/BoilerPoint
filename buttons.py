@@ -110,6 +110,12 @@ cancel_button_for_user_help = InlineKeyboardMarkup(row_width=1)
 cancel_helper = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user_help")
 cancel_button_for_user_help.add(cancel_helper)
 
+#task battons
+ikbmtasks = InlineKeyboardMarkup(resize_keyboard=True)
+ibleft = InlineKeyboardButton(text="⬅️", callback_data="left")
+ibright = InlineKeyboardButton(text="➡️", callback_data="right")
+ibgo = InlineKeyboardButton(text="✅", callback_data="go")
+ikbmtasks.row(ibleft,ibgo,ibright)
 
 #rating buttons
 ikbmrating = InlineKeyboardMarkup(row_width=1)
