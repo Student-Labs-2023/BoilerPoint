@@ -73,6 +73,9 @@ class AdminPanel(StatesGroup):
     admin_menu = State()
     change_user = State()
     change_user_end = State()
+    get_info_about_user_start = State()
+    get_info_about_user = State()
+    get_info_about_user_end = State()
     change_user_start = State()
     change_user_fullname = State()
     change_user_fullnamestart = State()
@@ -106,7 +109,7 @@ class AdminPanel(StatesGroup):
 
 
 # Хендлер отмены действия через кнопку
-@dp.callback_query_handler(text="cancel", state=[AdminPanel.change_user_balance,AdminPanel.change_user_fullname,AdminPanel.change_user_agestart])
+@dp.callback_query_handler(text="cancel", state=[AdminPanel.change_user_balance,AdminPanel.change_user_fullname,AdminPanel.change_user_agestart,AdminPanel.get_info_about_user])
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню админ-панели.", reply_markup=admrkbm)
     await AdminPanel.admin_menu.set()
@@ -137,6 +140,51 @@ async def admin_change_user(message: types.Message, state: FSMContext):
         "Вы попали в меню редактирования пользователя, нажмите нужную вам кнопку чтобы изменить параметры пользователя. После нажатия на кнопку введите @username человека в телеграм чтобы поменять его параметры.",
         reply_markup=admue)
 
+@dp.message_handler(text="Получить информацию о пользователе", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
+async def admin_get_user_info(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    user = users.get(chat_id) 
+    user.user_state = str(AdminPanel.get_info_about_user)
+    await message.reply("Введите @username пользователя о котором хотите получить информацию", reply_markup=types.ReplyKeyboardRemove())
+    await message.reply("Для отмены действия, нажмите кнопку отмена", reply_markup=InlineKeyboardMarkup().add(cancel_button))
+    await AdminPanel.get_info_about_user.set()
+    users.set(user)
+
+@dp.message_handler(state=AdminPanel.get_info_about_user)
+async def admin_get_user_info_start(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    username = message.text
+    user = users.get(chat_id)
+    user.user_state = str(AdminPanel.get_info_about_user_start)
+    try:
+        userinfo = users.get(username)
+        pseudo = userinfo.full_name
+        gender = userinfo.gender
+        age = userinfo.age
+        balance = userinfo.balance
+        if gender:
+            gender = "🙋‍♂️"
+            image = os.environ.get("MALE")
+        else:
+            gender = "🙋‍♀️"
+            image = os.environ.get("FEMALE")
+            # Формирование сообщения профиля пользователя
+        profile_message = f"Профиль пользователя {username}:\n\n" \
+        f"{gender}{pseudo}, {age} лет\n└Место в топе: ?\n\n" \
+        f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
+        await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message, reply_markup=admue)
+        await AdminPanel.get_info_about_user_end.set()
+        user.user_state = str(AdminPanel.get_info_about_user_end)
+        users.set(user)
+        await state.finish()
+        await AdminPanel.change_user_start.set()
+    except IndexError:
+        await message.reply("Такого пользователя не существует. ", reply_markup=admue)
+        await AdminPanel.change_user_start.set()
+        user.user_state = str(AdminPanel.change_user_start)
+        users.set(user)
+       
+    
 @dp.message_handler(text="Изменить баланс", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_balance(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_balancestart.set()
@@ -500,7 +548,6 @@ async def handle_name(message: types.Message, state: FSMContext):
                                    reply_markup=rkbm)
         else:
             await bot.send_message(chat_id, f"Регистрация успешно завершена, {user.full_name}!", reply_markup=rkbm)
-
         await state.finish()
         await MenuStates.waiting_for_profile.set()
     else:
@@ -720,24 +767,29 @@ async def handle_profile(message: types.Message, state: FSMContext):
 async def del_profile(message: types.Message, state: FSMContext):
     select = message.text
     chat_id = message.chat.id
-    tgusr = '@' + message.from_user.username
-    if select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
+    tgname = message.from_user.username
+    if tgname == None and select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
         user = users.get(chat_id)
         users.delete(user)
-        if tgusr == None:
-            supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
-            #supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
-        else:
-            supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
-            # supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
-            supabase.table('Report').delete().eq('tgusr',tgusr).execute()
-
-
+        supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
+        #supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
         await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
+        await state.finish()
+    elif tgname != None and select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
+        tgname = "@" + tgname
+        user = users.get(tgname)
+        users.delete(user)
+        await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
+        #supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+        supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
+        supabase.table('Report').delete().eq('tgusr',tgname).execute()
         await state.finish()
     elif select == "⬅️Назад в меню":
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+    else:
+        await MenuStates.waiting_for_profile.set()
+        await bot.send_message(chat_id, "Некорректный выбор, вы вернулись в меню!", reply_markup=rkbm)
     
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
@@ -819,8 +871,8 @@ async def handle_help_end(message: types.Message, state: FSMContext):
 @dp.message_handler(text = "⬅️Назад в меню", state=[MenuStates.help,MenuStates.help_start])
 async def handle_help_back(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
     await MenuStates.waiting_for_profile.set()
+    await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
 
 @dp.message_handler(text = "Обращения", state = AdminPanel.admin_menu)
 async def handle_report(message: types.Message, state: FSMContext):
