@@ -720,9 +720,19 @@ async def handle_profile(message: types.Message, state: FSMContext):
 async def del_profile(message: types.Message, state: FSMContext):
     select = message.text
     chat_id = message.chat.id
+    tgusr = '@' + message.from_user.username
     if select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
         user = users.get(chat_id)
         users.delete(user)
+        if tgusr == None:
+            supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
+            #supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+        else:
+            supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
+            # supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+            supabase.table('Report').delete().eq('tgusr',tgusr).execute()
+
+
         await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
         await state.finish()
     elif select == "⬅️Назад в меню":
@@ -809,8 +819,8 @@ async def handle_help_end(message: types.Message, state: FSMContext):
 @dp.message_handler(text = "⬅️Назад в меню", state=[MenuStates.help,MenuStates.help_start])
 async def handle_help_back(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    await MenuStates.waiting_for_profile.set()
     await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+    await MenuStates.waiting_for_profile.set()
 
 @dp.message_handler(text = "Обращения", state = AdminPanel.admin_menu)
 async def handle_report(message: types.Message, state: FSMContext):
