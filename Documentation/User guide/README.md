@@ -53,7 +53,11 @@
 
 ## Кнопка "Задания" 
 
-TBD
+- Эта кнопка служит для просмотра заданий с ивентов 
+
+
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/c6f7d5c5-34b9-449b-a759-ca4b53488f56)
+
 
 
 ## Кнопка "Календарь событий"
@@ -141,6 +145,17 @@ TBD
 
 
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/2b4adf57-8418-471e-95c8-b2eb41708d9f)
+
+
+## Кнопка "Получить информацию о пользователе" в клавиатуре "Изменить пользователя"
+
+- Кнопка служит для получения основной информации о профиле ЛЮБОГО пользователя бота по его @username телеграма
+
+
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/583ffbcc-ead7-477c-9176-96f977b408eb)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/f64f0947-5366-4060-bff9-7b7dbb7a1704)
+
+
 
 
 ## Кнопка "Промокоды" в панели администратора
