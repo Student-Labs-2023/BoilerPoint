@@ -414,6 +414,8 @@ async def delete_promo_handler(message: types.Message, state: FSMContext):
     if not deleted.data:
         # ничего не удалено
         await message.reply("Промокод не найден", reply_markup=admpromo)
+        await state.finish()
+        await AdminPanel.promo_menu.set()
         return
 
     # удаление прошло успешно
