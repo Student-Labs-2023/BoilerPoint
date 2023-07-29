@@ -22,6 +22,7 @@ from supabase import Client, create_client
 from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id, \
     update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
 from codegen import *
+from funcs import show_rating, show_user_rating
 
 load_dotenv()
 
@@ -1023,36 +1024,6 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
     print(sost)
     await start_command(message, state)
 
-async def show_rating(chat_id: int):
-    # Запрос топ 4 пользователей из БД
-    top_users = supabase.table('UsersData').select('full_name', 'balance', 'tgusr').order('balance', desc = True).limit(4).execute()
-
-    # Формируем текст рейтинга
-    rating_text = "🏆 Рейтинг пользователей 🏆\n\n"
-    for i, user in enumerate(top_users.data):
-        position = i + 1
-        full_name = user['full_name']
-        balance = user['balance']
-        tgusr = user['tgusr']
-        rating_text += f"{position}. {full_name} ({tgusr}) - {balance} баллов\n"
-
-    # Отправляем сообщение
-    await bot.send_message(chat_id, rating_text, reply_markup=ikbmrating)
-
-async def show_user_rating(chat_id: int):
-    # Запрос топ 4 пользователей из БД
-    top_users = supabase.table('UsersData').select('full_name', 'balance', ).order('balance', desc = True).limit(4).execute()
-
-    # Формируем текст рейтинга
-    rating_text = "🏆 Рейтинг пользователей 🏆\n\n"
-    for i, user in enumerate(top_users.data):
-        position = i + 1
-        full_name = user['full_name']
-        balance = user['balance']
-        rating_text += f"{position}. {full_name}  - {balance} баллов\n"
-
-    # Отправляем сообщение
-    await bot.send_message(chat_id, rating_text, reply_markup=ikbmrating)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
