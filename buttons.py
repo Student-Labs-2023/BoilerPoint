@@ -92,11 +92,12 @@ admui_back = InlineKeyboardButton(text="⬅️Отменить редактир�
 admpromo = ReplyKeyboardMarkup(resize_keyboard=True)
 admpromo_checkpromo = KeyboardButton(text="Действующие промокоды")
 admpromo_addpromo = KeyboardButton(text="Добавить промокод")
+admpromo_namingpromo = KeyboardButton(text="Нэйминг-промо")
 admpromo_delpromo = KeyboardButton(text="Удалить промокод")
 addpromo_addqr = KeyboardButton(text="Добавить QR")
 admpromo.row(addpromo_addqr)
 admpromo.row(admpromo_checkpromo)
-admpromo.row(admpromo_addpromo,admpromo_delpromo)
+admpromo.row(admpromo_addpromo,admpromo_namingpromo,admpromo_delpromo)
 admpromo.row(admue_back)
 
 cancel_button = InlineKeyboardButton(text="❌Отмена", callback_data="cancel")

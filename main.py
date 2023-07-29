@@ -87,6 +87,10 @@ class AdminPanel(StatesGroup):
     promo_menu = State()
     promo_check_promocode = State()
     promo_addpromostart = State()
+    promo_addpromo_naming = State()
+    promo_addpromo_naming_usages = State()
+    promo_addpromo_naming_cost = State()
+    promo_addpromo_naming_end = State()
     promo_addpromousages = State()
     promo_addpromocost = State()
     promo_addpromoend = State()
@@ -368,6 +372,42 @@ async def admin_promocodes_check(message: types.Message, state: FSMContext):
     await state.finish()
     await AdminPanel.promo_menu.set()
     user.user_state = str(AdminPanel.promo_menu)
+
+
+@dp.message_handler(text='Нэйминг-промо', state=AdminPanel.promo_menu)
+async def get_naming_promo(message: types.Message, state: FSMContext):
+    await message.reply("Введите имя промокода", reply_markup=types.ReplyKeyboardRemove())
+    user = users.get(message.chat.id)
+    await AdminPanel.promo_addpromo_naming.set()
+
+@dp.message_handler(state=AdminPanel.promo_addpromo_naming)
+async def get_naming_promo_usages(message: types.Message, state:FSMContext):
+    name = str(message.text)
+    await message.reply("Введите количество использований:")
+    await state.update_data(name=name)
+    await AdminPanel.promo_addpromo_naming_cost.set()
+
+@dp.message_handler(state=AdminPanel.promo_addpromo_naming_cost)
+async def get_naming_promo_cost(message: types.Message, state:FSMContext):
+    usages = int(message.text)
+    await message.reply("Введите цену промокода:")
+    await state.update_data(usages=usages)
+    await AdminPanel.promo_addpromo_naming_end.set()
+
+@dp.message_handler(state=AdminPanel.promo_addpromo_naming_end)
+async def create_naming_promo(message: types.Message, state:FSMContext):
+    cost = int(message.text)
+    data = await state.get_data()
+    name = data.get("name")
+    usages = data.get("usages")
+    code = generate_naming_promo(name, usages, cost)
+
+    await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан", reply_markup=admpromo)
+    await state.finish()
+    await AdminPanel.promo_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.promo_menu)
+
 
 
 @dp.message_handler(text ='Добавить промокод',state=AdminPanel.promo_menu)
