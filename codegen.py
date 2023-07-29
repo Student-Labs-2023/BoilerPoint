@@ -27,6 +27,9 @@ def generate_promo(usages, cost):
     if cost == 0:
         cost = 1
 
+    if usages < 0:
+        usages = 1
+
     data = {
         'promo': code,
         'last': usages,
@@ -37,3 +40,20 @@ def generate_promo(usages, cost):
     print(f"Added {code} with {usages} usages and {cost} cost to {table_name} table")
     return code
 
+def generate_naming_promo(name, usages, cost):
+
+    if cost == 0:
+        cost = 1
+
+    if usages < 0:
+        usages = 1
+
+    data = {
+        'promo': name,
+        'last': usages,
+        'cost': cost
+    }
+
+    supabase.table(table_name).insert(data).execute()
+    print(f"Added {name} with {usages} usages and {cost} cost to {table_name} table")
+    return name
