@@ -136,7 +136,7 @@ TBD
 - При нажатии на кнопку у вас появится следующая клавиатура 
 
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/efaa9fb3-c64c-48e5-b611-9087d1d5a38e)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/9229f85c-cf54-4f8f-8fec-404bd3670460)
 
 
 - Нажмите на нужный вам параметр чтобы изменить определённого пользователя и следуйте указаниям бота
@@ -153,7 +153,7 @@ TBD
 
 
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/583ffbcc-ead7-477c-9176-96f977b408eb)
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/f64f0947-5366-4060-bff9-7b7dbb7a1704)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/530f5969-a9fd-4f43-8a63-d8e322d1ecad)
 
 
 
