@@ -37,7 +37,7 @@
 - Также отобразится основная информация о вашем профиле 
 
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/e1177aac-8f8b-4adf-a18b-d08f1cbf7f72)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/b177d111-33f6-4a95-bedd-1cdd88c59cbc)
 
 
 ## Кнопка  "Удалить профиль" в клавиатуре профиля 
@@ -164,7 +164,7 @@ TBD
 - При нажатии на эту кнопку у вас появится следующая клавиатура 
 
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/aa3df4da-d208-4f45-9a21-e3eddc67441d)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/e9b55a7a-f1bd-49b3-9c77-55bef52aa3a3)
 
 
 ## Кнопка "Добавить промокод" в клавиатуре промокодов
@@ -182,6 +182,13 @@ TBD
 
 
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/c6799e13-c36e-43cf-88c8-0e9cc519a368)
+
+
+## Кнопка "Нэйминг-промо" в клавиатуре промокодов
+
+- Эта кнопка служит для создания нэйминговых промокодов (содержащих слово в названии)
+
+- Следуйте инструкциям бота чтобы создать именованный промокод
 
 
 ## Кнопка "Удалить промокод" в клавиатуре промокодов
