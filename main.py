@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+import json
 from aiogram import Bot, types
 from io import BytesIO
 import qrcode
@@ -116,9 +117,11 @@ class EventMakerPanel(StatesGroup):
 
 @dp.message_handler(commands=['event'], state='*')
 async def event_command(message: types.Message, state: FSMContext):
-    event_list = ['5617565289', '415378656', '551929814', '390483228']
-    if str(message.from_user.id) not in event_list:
-        await message.reply("У вас нет прав event maker`a!")
+    with open('roles.json') as f:
+        event_roles = json.load(f)['event_makers']
+
+    if str(message.from_user.id) not in event_roles:
+        await message.reply("У вас нет прав event maker'а!", reply_markup=rkbm)
         return
 
     await EventMakerPanel.menu.set()
@@ -144,9 +147,11 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(commands=['admin'], state='*')
 async def admin_command(message: types.Message, state: FSMContext):
     # Проверка, что пользователь в списке админов
-    admin_list = ['5617565289', '415378656', '551929814', '390483228']
-    if str(message.from_user.id) not in admin_list:
-        await message.reply("У вас нет прав администратора!")
+    with open('roles.json') as f:
+        admin_roles = json.load(f)['admins']
+
+    if str(message.from_user.id) not in admin_roles:
+        await message.reply("У вас нет прав администратора!", reply_markup=rkbm)
         return
 
     # Установка состояния и вывод кнопок админки
