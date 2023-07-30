@@ -110,8 +110,6 @@ class AdminPanel(StatesGroup):
     ticket_middle = State()
     ticket_end = State()
     rules = State()
-    rules_start = State()
-    rules_end = State()
     rules_addmaker = State()
     rules_addmaker_start = State()
     rules_delmaker = State()
@@ -531,7 +529,7 @@ async def give_rules_start(message: types.Message, state: FSMContext):
     user_data = supabase.table('UsersData').select('chat_id').eq('tgusr', tgusr).execute()
 
     if not user_data.data:
-        await message.reply("Пользователя с таким @username не существует в БД", reply_markup=ruleskbm)
+        await message.reply("Пользователя с таким @username не существует", reply_markup=ruleskbm)
         await state.finish()
         await AdminPanel.rules.set()
         return
@@ -551,6 +549,38 @@ async def give_rules_start(message: types.Message, state: FSMContext):
     await state.finish()
     await AdminPanel.rules.set()
 
+@dp.message_handler(text="Забрать права", state=AdminPanel.rules)
+async def del_from_eventers(message: types.Message, state:FSMContext):
+    await AdminPanel.rules_delmaker.set()
+    await message.reply("Введите @username пользователя у котрого хотите забрать права",reply_markup=types.ReplyKeyboardRemove())
+
+@dp.message_handler(state=AdminPanel.rules_delmaker)
+async def del_from_eventers_start(message: types.Message, state: FSMContext):
+  tgusr = message.text
+
+  user_data = supabase.table('UsersData').select('chat_id').eq('tgusr', tgusr).execute()
+
+  if not user_data.data:
+    await message.reply("Пользователя с таким username не существует", reply_markup=ruleskbm)
+    await state.finish()
+    await AdminPanel.rules.set()
+    return
+
+  chat_id = user_data.data[0]['chat_id']
+
+  with open('roles.json', 'r') as f:
+    roles = json.load(f)
+
+  if str(chat_id) in roles['event_makers']:
+    roles['event_makers'].remove(str(chat_id))
+
+  with open('roles.json', 'w') as f:
+    json.dump(roles, f)
+
+  await message.reply("Права успешно удалены", reply_markup=ruleskbm)
+
+  await state.finish()
+  await AdminPanel.rules.set()
 
 
 @dp.message_handler(text="⬅️Админ меню", state=AdminPanel.rules)
