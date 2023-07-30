@@ -45,6 +45,14 @@ backbutton = KeyboardButton(text="⬅️Назад в меню")
 confirmbutton.row(confbutton)
 confirmbutton.row(backbutton)
 
+#usermaker buttons
+usermakerkbm = ReplyKeyboardMarkup(resize_keyboard=True)
+usmkbm_task = KeyboardButton(text="📝Создать задание")
+usmkbm_menu = KeyboardButton(text="⬅️Меню")
+usermakerkbm.row(usmkbm_task)
+usermakerkbm.row(usmkbm_menu)
+
+
 #admin buttons
 admrkbm = ReplyKeyboardMarkup(resize_keyboard=True)
 admk_user_editor = KeyboardButton(text="⚙️Изменить пользователя")
@@ -111,7 +119,7 @@ cancel_button_for_user_help = InlineKeyboardMarkup(row_width=1)
 cancel_helper = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user_help")
 cancel_button_for_user_help.add(cancel_helper)
 
-#task battons
+#task buttons
 ikbmtasks = InlineKeyboardMarkup(resize_keyboard=True)
 ibleft = InlineKeyboardButton(text="⬅️", callback_data="left")
 ibright = InlineKeyboardButton(text="➡️", callback_data="right")

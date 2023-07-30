@@ -109,9 +109,31 @@ class AdminPanel(StatesGroup):
     ticket_middle = State()
     ticket_end = State()
 
+class EventMakerPanel(StatesGroup):
+    menu = State()
+    add = State()
+    delete = State()
 
+@dp.message_handler(commands=['event'], state='*')
+async def event_command(message: types.Message, state: FSMContext):
+    event_list = ['5617565289', '415378656', '551929814', '390483228']
+    if str(message.from_user.id) not in event_list:
+        await message.reply("У вас нет прав event maker`a!")
+        return
 
+    await EventMakerPanel.menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(EventMakerPanel.menu)
+    users.set(user)
+    await message.reply("Вы вошли в панель event maker`a!", reply_markup=usermakerkbm)
 
+@dp.message_handler(text = "⬅️Меню", state=EventMakerPanel.menu)
+async def back_from_event(message: types.Message, state:FSMContext):
+    await MenuStates.waiting_for_profile.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(MenuStates.waiting_for_profile)
+    users.set(user)
+    await message.reply("Вы вышли из панели event maker`a", reply_markup=rkbm)
 
 # Хендлер отмены действия через кнопку
 @dp.callback_query_handler(text="cancel", state=[AdminPanel.change_user_balance,AdminPanel.change_user_fullname,AdminPanel.change_user_agestart,AdminPanel.get_info_about_user])
