@@ -518,6 +518,41 @@ async def give_ruleskbm(message: types.Message, state:FSMContext):
     users.set(user)
     await message.reply("Вы попали в раздел для выдачи права создания заданий пользователям. Нажмите на кнопку и следуйте указаниям.", reply_markup=ruleskbm)
 
+@dp.message_handler(text="Выдать права",state = AdminPanel.rules)
+async def give_rules(message: types.Message, state: FSMContext):
+    await AdminPanel.rules_addmaker.set()
+    await message.reply("Введите @username пользователя которому хотите выдать права ивент мейкера", reply_markup=types.ReplyKeyboardRemove())
+
+
+@dp.message_handler(state=AdminPanel.rules_addmaker)
+async def give_rules_start(message: types.Message, state: FSMContext):
+    tgusr = message.text
+
+    user_data = supabase.table('UsersData').select('chat_id').eq('tgusr', tgusr).execute()
+
+    if not user_data.data:
+        await message.reply("Пользователя с таким @username не существует в БД", reply_markup=ruleskbm)
+        await state.finish()
+        await AdminPanel.rules.set()
+        return
+
+    chat_id = user_data.data[0]['chat_id']
+
+    with open('roles.json', 'r') as f:
+        roles = json.load(f)
+
+    roles['event_makers'].append(str(chat_id))
+
+    with open('roles.json', 'w') as f:
+        json.dump(roles, f)
+
+    await message.reply("Права выданы успешно", reply_markup=ruleskbm)
+
+    await state.finish()
+    await AdminPanel.rules.set()
+
+
+
 @dp.message_handler(text="⬅️Админ меню", state=AdminPanel.rules)
 async def back_from_rules(message: types.Message, state: FSMContext):
     await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
