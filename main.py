@@ -369,6 +369,7 @@ async def admin_promocodes_check(message: types.Message, state: FSMContext):
         promo_text += escape_md(f"{code} - {uses_left} исп., {cost} поинтов\n")
 
     await bot.send_message(chat_id, promo_text, parse_mode="MarkdownV2", reply_markup=admpromo)
+    supabase.table('Promocode').delete().eq('last', 0).execute()
     await state.finish()
     await AdminPanel.promo_menu.set()
     user.user_state = str(AdminPanel.promo_menu)
