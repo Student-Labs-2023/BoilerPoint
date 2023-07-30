@@ -582,6 +582,26 @@ async def del_from_eventers_start(message: types.Message, state: FSMContext):
   await state.finish()
   await AdminPanel.rules.set()
 
+@dp.message_handler(text='Действующие права', state=AdminPanel.rules)
+async def show_rules(message: types.Message, state: FSMContext):
+
+  with open('roles.json', 'r') as f:
+    roles = json.load(f)
+
+  event_makers = roles['event_makers']
+
+  rules_text = "📝 Пользователи с правами ивент-мейкера:\n\n"
+
+  for chat_id in event_makers:
+    user_data = supabase.table('UsersData').select('tgusr').eq('chat_id', int(chat_id)).execute()
+    if user_data.data:
+      username = user_data.data[0]['tgusr']
+      rules_text += f"{username} - {chat_id}\n"
+
+  await message.reply(rules_text)
+
+  await state.finish()
+  await AdminPanel.rules.set()
 
 @dp.message_handler(text="⬅️Админ меню", state=AdminPanel.rules)
 async def back_from_rules(message: types.Message, state: FSMContext):
