@@ -62,10 +62,21 @@ admk_menu = KeyboardButton(text="⬅️Меню")
 admk_liderboard = KeyboardButton(text="📊Рейтинг")
 admk_promo = KeyboardButton(text="🗝️Промокоды")
 admk_ticket = KeyboardButton(text="Обращения")
+admk_rules = KeyboardButton(text="Права")
 admrkbm.row(admk_user_editor,admk_event_creation)
 admrkbm.row(admk_job_creation,admk_promo)
-admrkbm.row(admk_menu,admk_liderboard)
-admrkbm.row(admk_ticket)
+admrkbm.row(admk_ticket,admk_liderboard)
+admrkbm.row(admk_menu,admk_rules)
+
+#rules keyboard
+ruleskbm = ReplyKeyboardMarkup(resize_keyboard=True)
+ruleskbm_addmaker = KeyboardButton(text="Выдать права")
+ruleskbm_delmaker = KeyboardButton(text="Забрать права")
+ruleskbm_check = KeyboardButton(text="Действующие maker`ы")
+ruleskbm_back = KeyboardButton(text="⬅️Админ меню")
+ruleskbm.row(ruleskbm_addmaker,ruleskbm_delmaker)
+ruleskbm.row(ruleskbm_check)
+ruleskbm.row(ruleskbm_back)
 
 # admin report keyboard
 admreport = ReplyKeyboardMarkup(resize_keyboard=True)

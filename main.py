@@ -109,6 +109,13 @@ class AdminPanel(StatesGroup):
     ticket_start = State()
     ticket_middle = State()
     ticket_end = State()
+    rules = State()
+    rules_start = State()
+    rules_end = State()
+    rules_addmaker = State()
+    rules_addmaker_start = State()
+    rules_delmaker = State()
+    rules_delmaker_start = State()
 
 class EventMakerPanel(StatesGroup):
     menu = State()
@@ -497,6 +504,22 @@ async def delete_promo_handler(message: types.Message, state: FSMContext):
 # Хедлер для бека в меню админа
 @dp.message_handler(text="⬅️Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])
 async def admin_backtomenu(message: types.Message, state: FSMContext):
+    await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
+    await AdminPanel.admin_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.admin_menu)
+    users.set(user)
+
+@dp.message_handler(text="Права", state=AdminPanel.admin_menu)
+async def give_ruleskbm(message: types.Message, state:FSMContext):
+    await AdminPanel.rules.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.rules)
+    users.set(user)
+    await message.reply("Вы попали в раздел для выдачи права создания заданий пользователям. Нажмите на кнопку и следуйте указаниям.", reply_markup=ruleskbm)
+
+@dp.message_handler(text="⬅️Админ меню", state=AdminPanel.rules)
+async def back_from_rules(message: types.Message, state: FSMContext):
     await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
     await AdminPanel.admin_menu.set()
     user = users.get(message.chat.id)
