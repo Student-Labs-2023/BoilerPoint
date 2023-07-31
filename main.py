@@ -195,6 +195,10 @@ async def admin_get_user_info_start(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.get_info_about_user_start)
     try:
         userinfo = users.get(username)
+        userlist = supabase.table('UsersData').select('chat_id').order('balance', desc=True).execute().data
+        counter = 0
+        while userlist[counter]['chat_id'] != userinfo.chat_id:
+            counter += 1
         pseudo = userinfo.full_name
         gender = userinfo.gender
         age = userinfo.age
@@ -207,7 +211,7 @@ async def admin_get_user_info_start(message: types.Message, state: FSMContext):
             image = os.environ.get("FEMALE")
             # Формирование сообщения профиля пользователя
         profile_message = f"Профиль пользователя {username}:\n\n" \
-        f"{gender}{pseudo}, {age} лет\n└Место в топе: ?\n\n" \
+        f"{gender}{pseudo}, {age} лет\n└Место в топе: {counter+1}\n\n" \
         f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
         await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message, reply_markup=admue)
         await AdminPanel.get_info_about_user_end.set()
@@ -904,13 +908,17 @@ async def check_promocode(message: types.Message, state: FSMContext):
 async def user_rating_board(message: types.Message, state: FSMContext):
     await MenuStates.rating.set()
     user = users.get(message.chat.id)
-    user.user_state = str(MenuStates.rating.set())
+    user.user_state = str(MenuStates.rating)
     users.set(user)
     await show_user_rating(message.chat.id)
     await MenuStates.waiting_for_profile.set()
     user = users.get(message.chat.id)
     user.user_state = str(MenuStates.waiting_for_profile)
     users.set(user)
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Профиль
+#-----------------------------------------------------------------------------------------------------------------------
 
 @dp.message_handler(state=MenuStates.profile)
 async def handle_profile(message: types.Message, state: FSMContext):
@@ -923,6 +931,10 @@ async def handle_profile(message: types.Message, state: FSMContext):
         gender = user.gender
         age = user.age
         balance = user.balance
+        userlist = supabase.table('UsersData').select('chat_id').order('balance', desc=True).execute().data
+        counter = 0
+        while userlist[counter]['chat_id'] != chat_id:
+            counter+=1
         if gender:
             gender = "🙋‍♂️"
             image = os.environ.get("MALE")
@@ -931,7 +943,7 @@ async def handle_profile(message: types.Message, state: FSMContext):
             image = os.environ.get("FEMALE")
         # Формирование сообщения профиля пользователя
         profile_message = f"Добро пожаловать в ваш профиль:\n\n" \
-                          f"{gender}{pseudo}, {age} лет\n└Ваше место в топе: ?\n\n" \
+                          f"{gender}{pseudo}, {age} лет\n└Ваше место в топе: {counter+1}\n\n" \
                           f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
 
         await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message, reply_markup=profilebuttons)
@@ -948,7 +960,11 @@ async def handle_profile(message: types.Message, state: FSMContext):
     
     else:
         await bot.send_message(chat_id, "Некорректный выбор.")
-    
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Профиль
+#-----------------------------------------------------------------------------------------------------------------------
+
 @dp.message_handler(state=ProlfileStates.delete_profile)
 async def del_profile(message: types.Message, state: FSMContext):
     select = message.text
@@ -1143,9 +1159,7 @@ async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
     counter = counter.data[0]['counter']
-    print(counter)
     task = supabase.table('AdminTasks').select('name','description').eq('counter', counter).execute().data[0]
-    print(task)
     text = f"{counter}.{task['name']}\n{task['description']}"
     await bot.send_message(chat_id, text, reply_markup= ikbmtasks)
 
@@ -1181,7 +1195,6 @@ async def go(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
     counter = counter.data[0]['counter']
-    print(counter)
 
 #-----------------------------------------------------------------------------------------------------------------------
 #Система заданий
