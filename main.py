@@ -237,6 +237,16 @@ async def admin_change_user_balance(message: types.Message, state: FSMContext):
 @dp.message_handler(state=AdminPanel.change_user_balancestart)
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
     username = message.text  # получаем username
+
+    # Проверяем, есть ли такой пользователь
+    user_exists = supabase.table('UsersData').select('tgusr').eq('tgusr', username).execute()
+
+    if not user_exists.data:
+        await message.reply("Такого пользователя нет в базе данных", reply_markup=admue)
+        await state.finish()
+        await AdminPanel.change_user_start.set()
+        return
+
     await state.update_data(username=username)
     await AdminPanel.change_user_balance.set()
     await message.reply("Введите новый баланс пользователя", reply_markup=InlineKeyboardMarkup().add(cancel_button))
@@ -269,6 +279,16 @@ async def admin_change_user_fullname(message: types.Message, state: FSMContext):
 @dp.message_handler(state=AdminPanel.change_user_fullnamestart)
 async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
     username = message.text  # получаем username
+
+    # Проверяем, есть ли такой пользователь
+    user_exists = supabase.table('UsersData').select('tgusr').eq('tgusr', username).execute()
+
+    if not user_exists.data:
+        await message.reply("Такого пользователя нет в базе данных", reply_markup=admue)
+        await state.finish()
+        await AdminPanel.change_user_start.set()
+        return
+
     await state.update_data(username=username)  # сохраняем username в данных состояния
     await AdminPanel.change_user_fullname.set()  # переходим к следующему состоянию
     await message.reply("Введите новое ФИО пользователя", reply_markup=InlineKeyboardMarkup().add(cancel_button))
@@ -309,6 +329,16 @@ async def admin_change_user_age(message: types.Message, state: FSMContext):
 @dp.message_handler(state=AdminPanel.change_user_age)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
     username = message.text  # получаем username
+
+    # Проверяем, есть ли такой пользователь
+    user_exists = supabase.table('UsersData').select('tgusr').eq('tgusr', username).execute()
+
+    if not user_exists.data:
+        await message.reply("Такого пользователя нет в базе данных", reply_markup=admue)
+        await state.finish()
+        await AdminPanel.change_user_start.set()
+        return
+
     await state.update_data(username=username)  # сохраняем username в данных состояния
     await AdminPanel.change_user_agestart.set()  # переходим к следующему состоянию
     user = users.get(message.chat.id)
