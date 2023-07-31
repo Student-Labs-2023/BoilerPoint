@@ -20,8 +20,8 @@ from src.repository.usersrepository import UserRepository
 from src.repository.SupabaseUserRepository import SupabaseUserRepository
 from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
-from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id, \
-    update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
+#from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id, \
+#    update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
 from codegen import *
 from funcs import show_rating, show_user_rating
 
@@ -444,7 +444,6 @@ async def create_naming_promo(message: types.Message, state:FSMContext):
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
-
 
 
 @dp.message_handler(text ='Добавить промокод',state=AdminPanel.promo_menu)
@@ -917,7 +916,7 @@ async def user_rating_board(message: types.Message, state: FSMContext):
     users.set(user)
 
 #-----------------------------------------------------------------------------------------------------------------------
-#Профиль
+#Система отображения/удаления профиля
 #-----------------------------------------------------------------------------------------------------------------------
 
 @dp.message_handler(state=MenuStates.profile)
@@ -960,11 +959,7 @@ async def handle_profile(message: types.Message, state: FSMContext):
     
     else:
         await bot.send_message(chat_id, "Некорректный выбор.")
-
-#-----------------------------------------------------------------------------------------------------------------------
-#Профиль
-#-----------------------------------------------------------------------------------------------------------------------
-
+    
 @dp.message_handler(state=ProlfileStates.delete_profile)
 async def del_profile(message: types.Message, state: FSMContext):
     select = message.text
@@ -974,14 +969,14 @@ async def del_profile(message: types.Message, state: FSMContext):
         user = users.get(chat_id)
         users.delete(user)
         supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
-        #supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+        supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
         await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
         await state.finish()
     elif tgname != None and select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
         tgname = "@" + tgname
         user = users.get(tgname)
         users.delete(user)
-        #supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+        supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
         supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
         supabase.table('Report').delete().eq('tgusr',tgname).execute()
         await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
@@ -992,16 +987,37 @@ async def del_profile(message: types.Message, state: FSMContext):
     else:
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Некорректный выбор, вы вернулись в меню!", reply_markup=rkbm)
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Система отображения мероприятий
+#-----------------------------------------------------------------------------------------------------------------------
     
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    select = message.text
-    await bot.send_message(chat_id, f"Нажата кнопка календарь")
+    response = supabase.table('Event').select('*').limit(3).execute()
+    for event in response.data:
+        url = 'https://leader-id.ru/events/'
+        url = url +str(event['id'])
+        name = event['full_name']
+        date_start = event['date_start']
+        date_end = event['date_end']
+        events_message = f'------------------------------------- \n' \
+                         f"Название мероприятия: {name} \n" \
+                         f"Когда начнется мероприятие? ⏱{date_start} \n" \
+                         f"Когда закончится мероприятие? ⏱{date_end} \n" \
+                         f"Ссылка: {url} \n" \
+                         f'-------------------------------------' 
+        await bot.send_message(chat_id, events_message)
+    await MenuStates.waiting_for_profile.set()
     user = users.get(chat_id)
     user.user_state = str(MenuStates.calendar)
     users.set(user)
-    await MenuStates.waiting_for_profile.set()
+    
+#-----------------------------------------------------------------------------------------------------------------------
+#Система тикетов для юзера
+#-----------------------------------------------------------------------------------------------------------------------
+
 
 @dp.message_handler(state=MenuStates.help)
 async def handle_help(message: types.Message, state: FSMContext):
@@ -1031,7 +1047,6 @@ async def handle_help_start(message: types.Message, state: FSMContext):
         user = users.get(chat_id)
         user.user_state = str(MenuStates.help)
         users.set(user)
-
         return
 
     await bot.send_message(chat_id, "Нажата кнопка создать заявку", reply_markup=types.ReplyKeyboardRemove())
@@ -1075,6 +1090,12 @@ async def handle_help_back(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     await MenuStates.waiting_for_profile.set()
     await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Система тикетов для админов
+#-----------------------------------------------------------------------------------------------------------------------
+
 
 @dp.message_handler(text = "Обращения", state = AdminPanel.admin_menu)
 async def handle_report(message: types.Message, state: FSMContext):
@@ -1159,7 +1180,9 @@ async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
     counter = counter.data[0]['counter']
+    print(counter)
     task = supabase.table('AdminTasks').select('name','description').eq('counter', counter).execute().data[0]
+    print(task)
     text = f"{counter}.{task['name']}\n{task['description']}"
     await bot.send_message(chat_id, text, reply_markup= ikbmtasks)
 
@@ -1195,6 +1218,7 @@ async def go(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
     counter = counter.data[0]['counter']
+    print(counter)
 
 #-----------------------------------------------------------------------------------------------------------------------
 #Система заданий
