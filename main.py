@@ -58,6 +58,8 @@ class MenuStates(StatesGroup):
     help = State()
     help_start = State()
     help_end = State()
+    help_cancel = State()
+    help_ender = State()
     rating = State()
     promocode = State()
     promocodestart = State()
@@ -780,12 +782,12 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     elif select == "📊Рейтинг":
         await MenuStates.rating.set()
         await user_rating_board(message, state)
+    elif select =="❓Помощь":
+        await MenuStates.help.set()
+        await handle_help(message,state)
     elif select == "📆Календарь событий":
         await MenuStates.calendar.set()
         await handle_calendar(message, state)
-    elif select == "❓Помощь":
-        await MenuStates.help.set()
-        await handle_help(message, state)
     elif select == "📝Задания":
         counter_data = supabase.table('Pointer').select('chat_id').eq('chat_id', chat_id).execute()
         if not counter_data.data:
@@ -811,7 +813,7 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text="cancel_user_help", state=MenuStates.help_end)
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню помощи.", reply_markup=userhelp)
-    await MenuStates.help.set()
+    await MenuStates.help_cancel.set()
 
 @dp.message_handler(state=ProlfileStates.edit_profile)
 async def handle_waiting_for_edit_profile(message: types.Message, state: FSMContext):
@@ -1099,7 +1101,7 @@ async def handle_help_end(message: types.Message, state: FSMContext):
         tgusr = telegram_name
         if telegram_name == None:
             await bot.send_message(chat_id, "У вас нет имени пользователя телеграм!Укажите его в своём профиле и тогда администрация сможет вам помочь.", reply_markup=userhelp)
-            await MenuStates.help.set()
+            await MenuStates.help_cancel.set()
 
         else:
             tgusr = "@" + telegram_name
@@ -1113,13 +1115,14 @@ async def handle_help_end(message: types.Message, state: FSMContext):
     except:
         chat_id = message.chat.id
         await bot.send_message(chat_id, "Извините, произошла ошибка при отправке заявки", reply_markup=userhelp)
+        await MenuStates.help_cancel.set()
 
     # Сброс состояния
     await state.finish()
-    await MenuStates.help.set()
+    await MenuStates.help_ender.set()
     users.user_state=str(MenuStates.help)
 
-@dp.message_handler(text = "⬅️Назад в меню", state=[MenuStates.help,MenuStates.help_start])
+@dp.message_handler(text = "⬅️Назад в меню", state=[MenuStates.help,MenuStates.help_start,MenuStates.help_ender,MenuStates.help_cancel])
 async def handle_help_back(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     await MenuStates.waiting_for_profile.set()
