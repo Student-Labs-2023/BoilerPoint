@@ -6,7 +6,7 @@ import qrcode
 import random
 import string
 from aiogram.utils import executor , markdown
-from aiogram.utils.markdown import hlink, escape_md
+from aiogram.utils.markdown import hlink, escape_md , code
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import os
@@ -427,11 +427,11 @@ async def admin_promocodes_check(message: types.Message, state: FSMContext):
     promo_text = "📝 Действующие промокоды:\n\n"
 
     for promo in promos.data:
-        code = promo['promo']
+        codee = promo['promo']
         uses_left = promo['last']
         cost = promo['cost']
 
-        promo_text += escape_md(f"{code} - {uses_left} исп., {cost} поинтов\n")
+        promo_text += (code(f"{codee}") + f" \\- {uses_left} исп\\.\\, {cost} поинтов\n")
 
     await bot.send_message(chat_id, promo_text, parse_mode="MarkdownV2", reply_markup=admpromo)
     supabase.table('Promocode').delete().eq('last', 0).execute()
