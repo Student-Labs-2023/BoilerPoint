@@ -20,8 +20,7 @@ from src.repository.usersrepository import UserRepository
 from src.repository.SupabaseUserRepository import SupabaseUserRepository
 from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
-#from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id, \
-#update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
+#from Database.DataUsers import *
 from codegen import *
 from funcs import show_rating, show_user_rating
 
@@ -53,6 +52,9 @@ class MenuStates(StatesGroup):
     waiting_for_profile = State()
     profile = State()
     tasks = State()
+    tasks_checking = State()
+    tasks_checking_question = State()
+    tasks_solving = State()
     calendar = State()
     help = State()
     help_start = State()
@@ -1195,9 +1197,9 @@ async def handle_tasks(message: types.Message, state: FSMContext):
     user = users.get(chat_id)
     user.user_state = str(MenuStates.tasks)
     users.set(user)
-    await MenuStates.waiting_for_profile.set()
+    await MenuStates.tasks_checking.set()
 
-@dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile) #кнопка вправо 1 рубеж
+@dp.callback_query_handler(text="right", state=MenuStates.tasks_checking) #кнопка вправо 1 рубеж
 async def right(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
@@ -1208,7 +1210,7 @@ async def right(call: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await handle_tasks(call.message, state)
 
-@dp.callback_query_handler(text="left", state=MenuStates.waiting_for_profile) # кнопка влево 1 рубеж
+@dp.callback_query_handler(text="left", state=MenuStates.tasks_checking) # кнопка влево 1 рубеж
 async def left(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
@@ -1219,7 +1221,7 @@ async def left(call: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await handle_tasks(call.message, state)
 
-@dp.callback_query_handler(text="go", state=MenuStates.waiting_for_profile) #Человек выбрал задание и перешел в выбор вопроса # переход ко 2 рубежу # отображение 2 рубежа вариантов вопросов внутри коллекции заданий
+@dp.callback_query_handler(text="go", state=MenuStates.tasks_checking) #Человек выбрал задание и перешел в выбор вопроса # переход ко 2 рубежу # отображение 2 рубежа вариантов вопросов внутри коллекции заданий
 async def go(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
@@ -1231,8 +1233,9 @@ async def go(call: types.CallbackQuery, state: FSMContext):
         ikq.row(Rkey)
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
+    await MenuStates.tasks_checking_question.set()
 
-@dp.callback_query_handler(text=[0,1,2,3,4,5,6,7], state=MenuStates.waiting_for_profile) #Человек выбрал вопрос, отображение вариантов ответов внутри вопроса
+@dp.callback_query_handler(text=[0,1,2,3,4,5,6,7], state=MenuStates.tasks_checking_question) #Человек выбрал вопрос, отображение вариантов ответов внутри вопроса
 async def question( call: types.CallbackQuery, state: FSMContext):
     message = call.data
     chat_id = call.message.chat.id
@@ -1246,8 +1249,9 @@ async def question( call: types.CallbackQuery, state: FSMContext):
         ikanswer.row(Rkey)
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await bot.send_photo(chat_id, "https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/BoilerPoint.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L0JvaWxlclBvaW50LmpwZyIsImlhdCI6MTY5MDg4MjU1NiwiZXhwIjoxNzIyNDE4NTU2fQ.-AMp6dtQcRWE9JIV0JDR1GOMZ1ldE7LCAQxr27l2Szo&t=2023-08-01T09%3A35%3A58.287Z", question_text['questionfull'], reply_markup=ikanswer)
+    await MenuStates.tasks_solving.set()
 
-@dp.callback_query_handler(text=["A0","A1","A2","A3",], state=MenuStates.waiting_for_profile) # выбор варианта ответа и результат
+@dp.callback_query_handler(text=["A0","A1","A2","A3",], state=MenuStates.tasks_solving) # выбор варианта ответа и результат
 async def answer( call: types.CallbackQuery, state: FSMContext):
     message = call.data[1:]
     chat_id = call.message.chat.id
