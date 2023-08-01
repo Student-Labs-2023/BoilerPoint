@@ -41,19 +41,16 @@ pip install requirements.txt
 
 
 # Documentation 
-SupaBase - https://supabase.com/docs
 
-gspread - https://gspread.readthedocs.io/_/downloads/en/latest/pdf/
-
-pydantic - https://docs.pydantic.dev/latest/
-
-aiogram - https://aiogram.readthedocs.io/_/downloads/en/latest/pdf/
-
-schedule - https://schedule.readthedocs.io/en/stable/installation.html
-
-qrcode - https://pypi.org/project/qrcode/
-
-userguide - https://github.com/Student-Labs-2023/BoilerPoint/tree/main/Documentation/User%20guide
+| Frame    |   Docs                                                   |
+|-----------|---------------------------------------------------------|
+|SupaBase   | https://supabase.com/docs |
+|gspread    | https://gspread.readthedocs.io/_/downloads/en/latest/pdf/ |
+|pydantic   | https://docs.pydantic.dev/latest/ | 
+|aiogram    | https://aiogram.readthedocs.io/_/downloads/en/latest/pdf/ |
+|schedule   | https://schedule.readthedocs.io/en/stable/installation.html |
+|qrcode     | https://pypi.org/project/qrcode/ |
+|userguide  | https://github.com/Student-Labs-2023/BoilerPoint/tree/main/Documentation/User%20guide |
 
 
 # Start Jelezyaka 
