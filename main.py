@@ -406,7 +406,7 @@ async def admin_promocodes_add_qr_set(message: types.Message, state: FSMContext)
     qr.save(byte_io, 'PNG')
     byte_io.seek(0)
 
-    await message.reply_photo(byte_io, caption="Вот QR-код для промокода " + promo_code , reply_markup=admpromo)
+    await message.reply_photo(byte_io, caption="Вот QR\\-код для промокода " + code(promo_code) , reply_markup=admpromo, parse_mode="MarkdownV2")
 
     byte_io.close()
 
@@ -465,9 +465,10 @@ async def create_naming_promo(message: types.Message, state:FSMContext):
     data = await state.get_data()
     name = data.get("name")
     usages = data.get("usages")
-    code = generate_naming_promo(name, usages, cost)
+    codee = generate_naming_promo(name, usages, cost)
 
-    await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан", reply_markup=admpromo)
+    texting = (f'Промокод '+ code(f"{codee}") + f' с {usages} использованиями и ценой {cost} создан')
+    await message.reply(texting, reply_markup=admpromo, parse_mode= "MarkdownV2")
     await state.finish()
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
@@ -491,9 +492,10 @@ async def create_promo(message: types.Message, state: FSMContext):
     usages = data.get("usages")
     cost = int(message.text)
 
-    code = generate_promo(usages, cost)
+    codee = generate_promo(usages, cost)
 
-    await message.reply(f"Промокод {code} с {usages} использованиями и ценой {cost} создан", reply_markup=admpromo)
+    texting = (f'Промокод ' + code(f"{codee}") + f' с {usages} использованиями и ценой {cost} создан')
+    await message.reply(texting, reply_markup=admpromo, parse_mode="MarkdownV2")
     await state.finish()
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
