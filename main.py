@@ -21,7 +21,7 @@ from src.repository.SupabaseUserRepository import SupabaseUserRepository
 from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
 #from Database.DataUsers import update_user_state_by_id, delete_user_data_by_id, get_user_info_by_id, \
-#    update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
+#update_user_fullname_by_tgusr, update_user_age_by_tgusr, update_user_balance_by_tgusr
 from codegen import *
 from funcs import show_rating, show_user_rating
 
@@ -40,7 +40,6 @@ supabase: Client = create_client(url, key)
 table_name = "UsersData"
 
 users: UserRepository = SupabaseUserRepository(supabase)
-
 
 # Состояния регистрации
 class RegistrationStates(StatesGroup):
@@ -226,7 +225,6 @@ async def admin_get_user_info_start(message: types.Message, state: FSMContext):
         await AdminPanel.change_user_start.set()
         user.user_state = str(AdminPanel.change_user_start)
         users.set(user)
-       
     
 @dp.message_handler(text="Изменить баланс", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_balance(message: types.Message, state: FSMContext):
@@ -252,7 +250,6 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
         await state.finish()
         await AdminPanel.change_user_start.set()
         return
-
 
 @dp.message_handler(state=AdminPanel.change_user_balance)
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
@@ -297,7 +294,6 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         await AdminPanel.change_user_start.set()
         return
     # Проверяем, есть ли такой пользователь
-    
 
 @dp.message_handler(state=AdminPanel.change_user_fullname)
 async def admin_change_user_fullname_handler(message: types.Message, state: FSMContext):
@@ -350,7 +346,6 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         await state.finish()
         await AdminPanel.change_user_start.set()
         return
-    
 
 @dp.message_handler(state=AdminPanel.change_user_agestart)
 async def admin_change_user_age_handler(message: types.Message, state: FSMContext):
@@ -418,10 +413,6 @@ async def admin_promocodes_add_qr_set(message: types.Message, state: FSMContext)
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
 
-
-
-
-
 @dp.message_handler(text="Действующие промокоды", state=AdminPanel.promo_menu)
 async def admin_promocodes_check(message: types.Message, state: FSMContext):
     await AdminPanel.promo_check_promocode.set()
@@ -445,7 +436,6 @@ async def admin_promocodes_check(message: types.Message, state: FSMContext):
     await state.finish()
     await AdminPanel.promo_menu.set()
     user.user_state = str(AdminPanel.promo_menu)
-
 
 @dp.message_handler(text='Нэйминг-промо', state=AdminPanel.promo_menu)
 async def get_naming_promo(message: types.Message, state: FSMContext):
@@ -481,12 +471,10 @@ async def create_naming_promo(message: types.Message, state:FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
 
-
 @dp.message_handler(text ='Добавить промокод',state=AdminPanel.promo_menu)
 async def get_usages(message: types.Message, state: FSMContext):
     await message.reply("Введите количество использований:", reply_markup=types.ReplyKeyboardRemove())
     await AdminPanel.promo_addpromousages.set()
-
 
 @dp.message_handler(state=AdminPanel.promo_addpromousages)
 async def get_cost(message: types.Message, state: FSMContext):
@@ -494,7 +482,6 @@ async def get_cost(message: types.Message, state: FSMContext):
     await message.reply("Введите цену промокода:")
     await state.update_data(usages=usages)
     await AdminPanel.promo_addpromocost.set()
-
 
 @dp.message_handler(state=AdminPanel.promo_addpromocost)
 async def create_promo(message: types.Message, state: FSMContext):
@@ -537,7 +524,6 @@ async def delete_promo_handler(message: types.Message, state: FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
 
-
 # Хедлер для бека в меню админа
 @dp.message_handler(text="⬅️Админ меню", state=[AdminPanel.change_user_start, AdminPanel.change_user_end, AdminPanel.promo_menu])
 async def admin_backtomenu(message: types.Message, state: FSMContext):
@@ -547,7 +533,7 @@ async def admin_backtomenu(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
 
-@dp.message_handler(text="Права", state=AdminPanel.admin_menu)
+@dp.message_handler(text="👨‍🚀Организаторы", state=AdminPanel.admin_menu)
 async def give_ruleskbm(message: types.Message, state:FSMContext):
     await AdminPanel.rules.set()
     user = users.get(message.chat.id)
@@ -638,7 +624,6 @@ async def show_rules(message: types.Message, state: FSMContext):
       rules_text += f"{username} - {chat_id}\n"
 
   await message.reply(rules_text)
-
   await state.finish()
   await AdminPanel.rules.set()
 
@@ -724,7 +709,6 @@ async def handle_age(message: types.Message, state: FSMContext):
         # Запрашиваем пол пользователя
         await message.reply("Введите ваш пол (Male/Female):", reply_markup=ikbg)
 
-
 @dp.message_handler(state=RegistrationStates.waiting_for_gender)
 async def handle_gender(message: types.Message, state: FSMContext):
     gender = message.text.lower()
@@ -803,8 +787,6 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
     else:
         await message.reply("Нет такого варианта выбора!", reply_markup=rkbm)
 
-
-
 @dp.callback_query_handler(text="cancel_user", state=[ProlfileStates.edit_profile_name, ProlfileStates.edit_profile_age])
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
@@ -873,7 +855,6 @@ async def enter_promocode(message: types.Message):
     await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением")
     await MenuStates.promocodestart.set()
 
-
 @dp.message_handler(state=MenuStates.promocodestart)
 async def check_promocode(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -916,12 +897,10 @@ async def check_promocode(message: types.Message, state: FSMContext):
         users.set(user)
         return
 
-
     new_balance = balance + promocode['cost']
     print(new_balance)
 
     new_last = promocode['last'] - 1
-
     
     user.balance = new_balance
     # Добавим запись о том, что промокод был использован данным пользователем
@@ -935,9 +914,6 @@ async def check_promocode(message: types.Message, state: FSMContext):
     await MenuStates.waiting_for_profile.set()
     user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
     users.set(user)
-    
-
-
 
 @dp.message_handler(text ="📊Рейтинг", state=MenuStates.waiting_for_profile)
 async def user_rating_board(message: types.Message, state: FSMContext):
@@ -1054,7 +1030,6 @@ async def handle_calendar(message: types.Message, state: FSMContext):
 #Система тикетов для юзера
 #-----------------------------------------------------------------------------------------------------------------------
 
-
 @dp.message_handler(state=MenuStates.help)
 async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -1128,13 +1103,11 @@ async def handle_help_back(message: types.Message, state: FSMContext):
     await MenuStates.waiting_for_profile.set()
     await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
 
-
 #-----------------------------------------------------------------------------------------------------------------------
 #Система тикетов для админов
 #-----------------------------------------------------------------------------------------------------------------------
 
-
-@dp.message_handler(text = "Обращения", state = AdminPanel.admin_menu)
+@dp.message_handler(text = "📨Обращения", state = AdminPanel.admin_menu)
 async def handle_report(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     await bot.send_message(chat_id, "Нажата кнопка обращений", reply_markup=admreport)
@@ -1211,23 +1184,20 @@ async def handle_tickets_back(message: types.Message, state: FSMContext):
 #Система заданий
 #-----------------------------------------------------------------------------------------------------------------------
 
-@dp.message_handler(state=MenuStates.tasks)
+@dp.message_handler(state=MenuStates.tasks) #Вывод коллекции заданий (1 рубеж) AdminTasks
 async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
-    counter = counter.data[0]['counter']
-    print(counter)
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute().data[0]['counter']
     task = supabase.table('AdminTasks').select('name','description').eq('counter', counter).execute().data[0]
-    print(task)
     text = f"{counter}.{task['name']}\n{task['description']}"
-    await bot.send_message(chat_id, text, reply_markup= ikbmtasks)
+    await bot.send_photo(chat_id, "https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/BoilerPoint.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L0JvaWxlclBvaW50LmpwZyIsImlhdCI6MTY5MDg4MjU1NiwiZXhwIjoxNzIyNDE4NTU2fQ.-AMp6dtQcRWE9JIV0JDR1GOMZ1ldE7LCAQxr27l2Szo&t=2023-08-01T09%3A35%3A58.287Z", text, reply_markup= ikbmtasks)
 
     user = users.get(chat_id)
     user.user_state = str(MenuStates.tasks)
     users.set(user)
     await MenuStates.waiting_for_profile.set()
 
-@dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile)
+@dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile) #кнопка вправо 1 рубеж
 async def right(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
@@ -1238,7 +1208,7 @@ async def right(call: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await handle_tasks(call.message, state)
 
-@dp.callback_query_handler(text="left", state=MenuStates.waiting_for_profile)
+@dp.callback_query_handler(text="left", state=MenuStates.waiting_for_profile) # кнопка влево 1 рубеж
 async def left(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
@@ -1249,13 +1219,44 @@ async def left(call: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await handle_tasks(call.message, state)
 
-@dp.callback_query_handler(text="go", state=MenuStates.waiting_for_profile)
+@dp.callback_query_handler(text="go", state=MenuStates.waiting_for_profile) #Человек выбрал задание и перешел в выбор вопроса # переход ко 2 рубежу # отображение 2 рубежа вариантов вопросов внутри коллекции заданий
 async def go(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
     counter = counter.data[0]['counter']
-    print(counter)
+    question_list = supabase.table('AdminQuestion').select('question' ).eq('counter', counter).order('number', desc = False).execute().data
+    ikq = InlineKeyboardMarkup(row_width=1)
+    for keynomber in range(len(question_list)):
+        Rkey = InlineKeyboardButton(text=str(question_list[keynomber]["question"]), callback_data=keynomber)
+        ikq.row(Rkey)
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
+    await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
 
+@dp.callback_query_handler(text=[0,1,2,3,4,5,6,7], state=MenuStates.waiting_for_profile) #Человек выбрал вопрос, отображение вариантов ответов внутри вопроса
+async def question( call: types.CallbackQuery, state: FSMContext):
+    message = call.data
+    chat_id = call.message.chat.id
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute().data[0]['counter']
+    question_text = supabase.table('AdminQuestion').select('questionfull' ).eq('counter', counter).order('number', desc = False).execute().data[int(message)]
+    print(question_text)
+    answer_list = supabase.table('AdminAnswerOptions').select('answer').eq('counter', counter).execute().data
+    ikanswer = InlineKeyboardMarkup(row_width=1)
+    for keynomber in range(len(answer_list)):
+        Rkey = InlineKeyboardButton(text=str(answer_list[keynomber]['answer']), callback_data=f'A{keynomber}')
+        ikanswer.row(Rkey)
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
+    await bot.send_photo(chat_id, "https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/BoilerPoint.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L0JvaWxlclBvaW50LmpwZyIsImlhdCI6MTY5MDg4MjU1NiwiZXhwIjoxNzIyNDE4NTU2fQ.-AMp6dtQcRWE9JIV0JDR1GOMZ1ldE7LCAQxr27l2Szo&t=2023-08-01T09%3A35%3A58.287Z", question_text['questionfull'], reply_markup=ikanswer)
+
+@dp.callback_query_handler(text=["A0","A1","A2","A3",], state=MenuStates.waiting_for_profile) # выбор варианта ответа и результат
+async def answer( call: types.CallbackQuery, state: FSMContext):
+    message = call.data[1:]
+    chat_id = call.message.chat.id
+    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute().data[0]['counter']
+    answer = bool(supabase.table('AdminAnswerOptions').select('correct').eq('counter', counter).execute().data[int(message)]['correct'])
+    if answer == True:
+        await bot.send_message(chat_id, "Ответ верный")
+    else:
+        await bot.send_message(chat_id, "Вы ошиблись!")
 #-----------------------------------------------------------------------------------------------------------------------
 #Система заданий
 #-----------------------------------------------------------------------------------------------------------------------
