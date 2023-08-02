@@ -796,6 +796,11 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
     await ProlfileStates.edit_profile.set()
 
+@dp.callback_query_handler(text='back_to_menu', state = MenuStates.promocodestart)
+async def cancel_action(call: types.CallbackQuery, state: FSMContext):
+    await call.message.answer("Действие отменено, вы вернулись в главное меню.", reply_markup=rkbm)
+    await MenuStates.waiting_for_profile.set()
+
 @dp.callback_query_handler(text="cancel_user_help", state=MenuStates.help_end)
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню помощи.", reply_markup=userhelp)
@@ -856,7 +861,7 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
-    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением")
+    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением", reply_markup=cancel_button_to_main)
     await MenuStates.promocodestart.set()
 
 @dp.message_handler(state=MenuStates.promocodestart)
