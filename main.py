@@ -1016,20 +1016,21 @@ async def del_profile(message: types.Message, state: FSMContext):
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    response = supabase.table('Event').select('*').limit(3).execute()
+    response = supabase.table('Event').select('*').limit(5).execute()
+    events_message = 'Мероприятия в близжайшее время:'
     for event in response.data:
         url = 'https://leader-id.ru/events/'
         url = url +str(event['id'])
         name = event['full_name']
         date_start = event['date_start']
         date_end = event['date_end']
-        events_message = f'------------------------------------- \n' \
+        events_message += f' \n' \
                          f"Название мероприятия: {name} \n" \
                          f"Когда начнется мероприятие? ⏱{date_start} \n" \
                          f"Когда закончится мероприятие? ⏱{date_end} \n" \
                          f"Ссылка: {url} \n" \
-                         f'-------------------------------------' 
-        await bot.send_message(chat_id, events_message)
+                         f'---------------------------------------------------------------------------------' 
+    await bot.send_message(chat_id, events_message,disable_web_page_preview=True)
     await MenuStates.waiting_for_profile.set()
     user = users.get(chat_id)
     user.user_state = str(MenuStates.calendar)
