@@ -796,11 +796,6 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню редактирования профиля.", reply_markup=menuedit)
     await ProlfileStates.edit_profile.set()
 
-@dp.callback_query_handler(text='back_to_menu', state = MenuStates.promocodestart)
-async def cancel_action(call: types.CallbackQuery, state: FSMContext):
-    await call.message.answer("Действие отменено, вы вернулись в главное меню.", reply_markup=rkbm)
-    await MenuStates.waiting_for_profile.set()
-
 @dp.callback_query_handler(text="cancel_user_help", state=MenuStates.help_end)
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню помощи.", reply_markup=userhelp)
@@ -861,7 +856,7 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
-    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением", reply_markup=cancel_button_to_main)
+    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением")
     await MenuStates.promocodestart.set()
 
 @dp.message_handler(state=MenuStates.promocodestart)
@@ -1012,24 +1007,25 @@ async def del_profile(message: types.Message, state: FSMContext):
 #-----------------------------------------------------------------------------------------------------------------------
 #Система отображения мероприятий
 #-----------------------------------------------------------------------------------------------------------------------
-    
+    р
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    response = supabase.table('Event').select('*').limit(3).execute()
+    response = supabase.table('Event').select('*').limit(5).execute()
+    events_message = 'Мероприятия в близжайшее время:'
     for event in response.data:
         url = 'https://leader-id.ru/events/'
         url = url +str(event['id'])
         name = event['full_name']
         date_start = event['date_start']
         date_end = event['date_end']
-        events_message = f'------------------------------------- \n' \
+        events_message += f' \n' \
                          f"Название мероприятия: {name} \n" \
                          f"Когда начнется мероприятие? ⏱{date_start} \n" \
                          f"Когда закончится мероприятие? ⏱{date_end} \n" \
                          f"Ссылка: {url} \n" \
-                         f'-------------------------------------' 
-        await bot.send_message(chat_id, events_message)
+                         f'---------------------------------------------------------------------------------' 
+    await bot.send_message(chat_id, events_message,disable_web_page_preview=True)
     await MenuStates.waiting_for_profile.set()
     user = users.get(chat_id)
     user.user_state = str(MenuStates.calendar)
