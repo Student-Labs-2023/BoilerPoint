@@ -126,6 +126,10 @@ cancel_button_for_user = InlineKeyboardMarkup(row_width=1)
 cancel_abob = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user")
 cancel_button_for_user.add(cancel_abob)
 
+cancel_button_to_main = InlineKeyboardMarkup(row_width=1)
+cancel_main = InlineKeyboardButton(text="Отмена❌", callback_data="back_to_menu")
+cancel_button_to_main.add(cancel_main)
+
 cancel_button_for_user_help = InlineKeyboardMarkup(row_width=1)
 cancel_helper = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user_help")
 cancel_button_for_user_help.add(cancel_helper)
