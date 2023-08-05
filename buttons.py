@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup,InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types.web_app_info import WebAppInfo
 #gender buttons
 ikbg = InlineKeyboardMarkup(row_width=2)
 ibm = InlineKeyboardButton(text="🙋‍♂️Мужчина",callback_data='1')
@@ -143,5 +144,5 @@ ikbmtasks.row(ibleft,ibgo,ibright)
 
 #rating buttons
 ikbmrating = InlineKeyboardMarkup(row_width=1)
-ibrating = InlineKeyboardButton(text="📊Полный рейтинг",url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQFzN5HRvQhS5j4kDcv9wWH3uucCqp1AFmu2ErZYikmmJSshj1f16v7ry013vde0y6OYVWeSsVtgaKT/pubhtml?gid=0&single=true')
+ibrating = InlineKeyboardButton(text="📊Полный рейтинг", web_app = WebAppInfo(url ='https://docs.google.com/spreadsheets/d/e/2PACX-1vQFzN5HRvQhS5j4kDcv9wWH3uucCqp1AFmu2ErZYikmmJSshj1f16v7ry013vde0y6OYVWeSsVtgaKT/pubhtml?gid=0&single=true') )
 ikbmrating.add(ibrating)
