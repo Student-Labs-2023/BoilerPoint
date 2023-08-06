@@ -3,8 +3,10 @@ import json
 from aiogram import Bot, types
 from io import BytesIO
 import qrcode
+import logging
 import random
 import string
+import asyncio
 from aiogram.utils import executor , markdown
 from aiogram.utils.markdown import hlink, escape_md , code
 from aiogram.dispatcher import Dispatcher, FSMContext
@@ -25,7 +27,7 @@ from codegen import *
 from funcs import show_rating, show_user_rating
 
 load_dotenv()
-
+logging.basicConfig(level=logging.INFO)
 # Инициализация бота, диспетчера и хранилищаа состояний
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -1289,6 +1291,15 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
     sost = await state.get_state()
     print(sost)
     await start_command(message, state)
+
+
+@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state='*')
+async def handle_qr(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
+    message.text = message.web_app_data.data
+    await asyncio.wait_for(check_promocode(message,state),timeout=3.5)
+
+    await message.delete()
+
 
 
 if __name__ == '__main__':
