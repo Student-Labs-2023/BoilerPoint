@@ -14,10 +14,11 @@ kschedule= KeyboardButton(text="📆Календарь событий")
 khelp= KeyboardButton(text="❓Помощь")
 kexercise= KeyboardButton(text="📝Задания")
 kpromo = KeyboardButton(text="🗝️Ввести промокод")
+qrscanner = KeyboardButton(text="📲QR-код", web_app=WebAppInfo(url="https://bpb-qr.pages.dev/"))
 rkbm.row(kprofile,kliderboard)
 rkbm.add(kexercise)
 rkbm.add(kschedule)
-rkbm.row(khelp,kpromo)
+rkbm.row(khelp,kpromo,qrscanner)
 
 
 #profilemenu buttons
