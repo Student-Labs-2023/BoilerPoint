@@ -1129,7 +1129,7 @@ async def handle_help_back(message: types.Message, state: FSMContext):
 @dp.message_handler(text = "📨Обращения", state = AdminPanel.admin_menu)
 async def handle_report(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    await bot.send_message(chat_id, "Нажата кнопка обращений", reply_markup=admreport)
+    await bot.send_message(chat_id, "Нажата кнопка обращений, здесь вы можете просмотреть действующие обращения от пользователей или удалить уже решённые. ", reply_markup=admreport)
     await AdminPanel.ticket.set()
     user = users.get(chat_id)
     user.user_state = str(AdminPanel.ticket)
