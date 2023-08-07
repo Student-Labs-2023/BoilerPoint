@@ -13,12 +13,20 @@ kliderboard= KeyboardButton(text="📊Рейтинг")
 kschedule= KeyboardButton(text="📆Календарь событий")
 khelp= KeyboardButton(text="❓Помощь")
 kexercise= KeyboardButton(text="📝Задания")
-kpromo = KeyboardButton(text="🗝️Ввести промокод")
-qrscanner = KeyboardButton(text="📲QR-код", web_app=WebAppInfo(url="https://bpb-qr.pages.dev/"))
+kpromo = KeyboardButton(text="🗝️Промокоды")
 rkbm.row(kprofile,kliderboard)
 rkbm.add(kexercise)
 rkbm.add(kschedule)
-rkbm.row(khelp,kpromo,qrscanner)
+rkbm.row(khelp,kpromo)
+
+#promo_menuu
+promo_kb = ReplyKeyboardMarkup(resize_keyboard=True)
+promo_kb_qrscanner = KeyboardButton(text="📲QR-код", web_app=WebAppInfo(url="https://bpb-qr.pages.dev/"))
+promo_kb_enter = KeyboardButton(text="🗝️Ввести промокод")
+promo_kb_back = KeyboardButton(text="⬅️Назад в меню")
+promo_kb.add(promo_kb_enter)
+promo_kb.add(promo_kb_qrscanner)
+promo_kb.add(promo_kb_back)
 
 
 #profilemenu buttons
@@ -135,6 +143,10 @@ cancel_button_to_main.add(cancel_main)
 cancel_button_for_user_help = InlineKeyboardMarkup(row_width=1)
 cancel_helper = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user_help")
 cancel_button_for_user_help.add(cancel_helper)
+
+cancel_button_for_user_promocode = InlineKeyboardMarkup(row_width=1)
+cancel_promo = InlineKeyboardButton(text="Отмена❌", callback_data="cancel_user_promocode")
+cancel_button_for_user_promocode.add(cancel_promo)
 
 #task buttons
 ikbmtasks = InlineKeyboardMarkup(resize_keyboard=True)

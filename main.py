@@ -787,9 +787,9 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
             supabase.table('Pointer').update({'counter': 0}).eq('chat_id', chat_id).execute()
         await MenuStates.tasks.set()
         await handle_tasks(message, state)
-    elif select == "🗝️Ввести промокод":
+    elif select == "🗝️Промокоды":
         await MenuStates.promocode.set()
-        await enter_promocode(message)
+        await bot.send_message(chat_id, "Вы попали в меню работы с промокодами", reply_markup=promo_kb)
     else:
         await message.reply("Нет такого варианта выбора!", reply_markup=rkbm)
 
@@ -800,8 +800,8 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(text='back_to_menu', state = MenuStates.promocodestart)
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
-    await call.message.answer("Действие отменено, вы вернулись в главное меню.", reply_markup=rkbm)
-    await MenuStates.waiting_for_profile.set()
+    await call.message.answer("Действие отменено, вы вернулись в меню промокодов.", reply_markup=promo_kb)
+    await MenuStates.promocode.set()
 
 @dp.callback_query_handler(text="cancel_user_help", state=MenuStates.help_end)
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
@@ -863,7 +863,8 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
-    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением", reply_markup=cancel_button_to_main)
+    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением", reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(message.chat.id, "Если хотите вернуться , то нажмите сюда", reply_markup=cancel_button_to_main)
     await MenuStates.promocodestart.set()
 
 @dp.message_handler(state=MenuStates.promocodestart)
@@ -882,8 +883,8 @@ async def check_promocode(message: types.Message, state: FSMContext):
     if not promocode_data.data:
         await message.reply("Промокод не найден!")
         await state.finish()
-        await MenuStates.waiting_for_profile.set()
-        user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+        await MenuStates.promocode.set()
+        user.user_state = str(MenuStates.promocode)  # Меню стейт
         users.set(user)
         return
 
@@ -895,16 +896,16 @@ async def check_promocode(message: types.Message, state: FSMContext):
         # уже использовал
         await message.reply("Вы уже использовали этот промокод!")
         await state.finish()
-        await MenuStates.waiting_for_profile.set()
-        user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+        await MenuStates.promocode.set()
+        user.user_state = str(MenuStates.promocode)  # Меню стейт
         users.set(user)
         return
 
     if promocode['last'] <= 0:
         await message.reply("Срок действия промокода истек!")
         await state.finish()
-        await MenuStates.waiting_for_profile.set()
-        user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+        await MenuStates.promocode.set()
+        user.user_state = str(MenuStates.promocode)  # Меню стейт
         users.set(user)
         return
 
@@ -919,12 +920,18 @@ async def check_promocode(message: types.Message, state: FSMContext):
     expression = ''.join(random.choices(string.ascii_letters, k=8))
     supabase.table('UsedPromocode').insert({'id' : expression,'promo': poro, 'chat_id': str(chat_id)}).execute()
 
-    await message.reply(f"Ваш баланс пополнен на {promocode['cost']}!", reply_markup=rkbm)
+    await message.reply(f"Ваш баланс пополнен на {promocode['cost']}!", reply_markup=promo_kb)
 
     await state.finish()
-    await MenuStates.waiting_for_profile.set()
-    user.user_state = str(MenuStates.waiting_for_profile)  # Меню стейт
+    await MenuStates.promocode.set()
+    user.user_state = str(MenuStates.promocode)  # Меню стейт
     users.set(user)
+
+@dp.message_handler(text="⬅️Назад в меню", state=MenuStates.promocode)
+async def back_from_promo_menu(message: types.Message, state: FSMContext):
+    await MenuStates.waiting_for_profile.set()
+    await bot.send_message(message.chat.id, "Вы вернулись в главное меню", reply_markup=rkbm)
+
 
 @dp.message_handler(text ="📊Рейтинг", state=MenuStates.waiting_for_profile)
 async def user_rating_board(message: types.Message, state: FSMContext):
@@ -1292,6 +1299,9 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
     print(sost)
     await start_command(message, state)
 
+#-----------------------------------------------------------------------------------------------------------------------
+#Система для Telegram Web App
+#-----------------------------------------------------------------------------------------------------------------------
 
 @dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state='*')
 async def handle_qr(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
@@ -1300,7 +1310,9 @@ async def handle_qr(message: types.ContentType.WEB_APP_DATA , state: FSMContext)
 
     await message.delete()
 
-
+#-----------------------------------------------------------------------------------------------------------------------
+#Система для Telegram Web App
+#-----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
