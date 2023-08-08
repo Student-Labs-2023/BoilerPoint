@@ -1,5 +1,8 @@
 from dotenv import load_dotenv
 import json
+import PIL.Image
+import io
+import pyzbar.pyzbar as pyzbar
 from aiogram import Bot, types
 from io import BytesIO
 import qrcode
@@ -863,9 +866,25 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
-    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением", reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением или отправьте боту изображение QR-кода", reply_markup=types.ReplyKeyboardRemove())
     await bot.send_message(message.chat.id, "Если хотите вернуться , то нажмите сюда", reply_markup=cancel_button_to_main)
     await MenuStates.promocodestart.set()
+
+@dp.message_handler(content_types=['photo'], state=MenuStates.promocodestart)
+async def check_qr_code(message: types.Message, state: FSMContext):
+
+  photo_bytes = await message.photo[-1].download(destination=io.BytesIO())
+  photo_bytes = photo_bytes.getvalue()
+
+  photo_image = PIL.Image.open(io.BytesIO(photo_bytes))
+
+  qr_code = pyzbar.decode(photo_image)
+
+  if qr_code:
+    qr_code = qr_code[0].data.decode()
+
+  message.text = qr_code
+  await check_promocode(message, state)
 
 @dp.message_handler(state=MenuStates.promocodestart)
 async def check_promocode(message: types.Message, state: FSMContext):
@@ -881,7 +900,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
     promocode_data = supabase.table('Promocode').select('last', 'cost').eq('promo', promocode).execute()
 
     if not promocode_data.data:
-        await message.reply("Промокод не найден!")
+        await message.reply("Промокод не найден!", reply_markup=promo_kb)
         await state.finish()
         await MenuStates.promocode.set()
         user.user_state = str(MenuStates.promocode)  # Меню стейт
@@ -894,7 +913,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
 
     if used_promocode_data.data:
         # уже использовал
-        await message.reply("Вы уже использовали этот промокод!")
+        await message.reply("Вы уже использовали этот промокод!", reply_markup=promo_kb)
         await state.finish()
         await MenuStates.promocode.set()
         user.user_state = str(MenuStates.promocode)  # Меню стейт
@@ -902,7 +921,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
         return
 
     if promocode['last'] <= 0:
-        await message.reply("Срок действия промокода истек!")
+        await message.reply("Срок действия промокода истек!", reply_markup=promo_kb)
         await state.finish()
         await MenuStates.promocode.set()
         user.user_state = str(MenuStates.promocode)  # Меню стейт
@@ -1026,20 +1045,20 @@ async def del_profile(message: types.Message, state: FSMContext):
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     response = supabase.table('Event').select('*').limit(5).execute()
-    events_message = 'Мероприятия:'
+    events_message = 'Мероприятия в близжайшее время:'
     for event in response.data:
         url = 'https://leader-id.ru/events/'
         url = url +str(event['id'])
         name = event['full_name']
-        date_start = event['date_start'][:16]
+        date_start = event['date_start']
         date_end = event['date_end']
-        date = date_start + "-" + date_end[11:16]
-        print(date)
         events_message += f' \n' \
-                         f"[{name}]({url}) \n" \
-                         f"⏱{date} \n" \
+                         f"Название мероприятия: {name} \n" \
+                         f"Когда начнется мероприятие? ⏱{date_start} \n" \
+                         f"Когда закончится мероприятие? ⏱{date_end} \n" \
+                         f"Ссылка: {url} \n" \
                          f'------------------------------'
-    await bot.send_message(chat_id, events_message,disable_web_page_preview=True,parse_mode=types.ParseMode.MARKDOWN)
+    await bot.send_message(chat_id, events_message,disable_web_page_preview=True)
     await MenuStates.waiting_for_profile.set()
     user = users.get(chat_id)
     user.user_state = str(MenuStates.calendar)
