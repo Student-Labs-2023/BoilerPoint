@@ -21,7 +21,7 @@ async def show_rating(chat_id: int):
         rating_text += f"{position}. {full_name} ({tgusr}) - {balance} баллов\n"
 
     # Отправляем сообщение
-    await bot.send_message(chat_id, rating_text, reply_markup=ikbmrating)
+    await bot.send_message(chat_id, rating_text, reply_markup=ikbmadminrating)
 
 async def show_user_rating(chat_id: int):
     # Запрос топ 4 пользователей из БД

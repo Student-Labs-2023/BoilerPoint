@@ -159,3 +159,7 @@ ikbmtasks.row(ibleft,ibgo,ibright)
 ikbmrating = InlineKeyboardMarkup(row_width=1)
 ibrating = InlineKeyboardButton(text="📊Полный рейтинг", web_app = WebAppInfo(url ='https://docs.google.com/spreadsheets/d/e/2PACX-1vQFzN5HRvQhS5j4kDcv9wWH3uucCqp1AFmu2ErZYikmmJSshj1f16v7ry013vde0y6OYVWeSsVtgaKT/pubhtml?gid=0&single=true') )
 ikbmrating.add(ibrating)
+
+ikbmadminrating = InlineKeyboardMarkup(row_width=1)
+ibadminrating = InlineKeyboardButton(text="📊Админ Рейтинг",web_app = WebAppInfo(url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR__0ahX-O5SK3sS7OditV88sjG64duAF6mAW702CT3uM3Yj6z5mwsnxv-lL2vF9-H3YjlD0rtmg84N/pubhtml?gid=0&single=true'))
+ikbmadminrating.add(ibadminrating)
