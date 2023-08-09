@@ -30,10 +30,10 @@ def rating_update():
         if user['balance'] < 1:
             break
         if user["gender"]:
-            insert_image = '=IMAGE("https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/male.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L21hbGUucG5nIiwiaWF0IjoxNjg5NTI3MTA0LCJleHAiOjE3MjEwNjMxMDR9.Op6Tbm0ZZ_1zwCfygEAV4uOUP_bwqcXDIdGDuwViRDU&t=2023-07-16T17%3A05%3A09.763Z")'
+            insert_image = '=IMAGE("https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/male.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L21hbGUuanBnIiwiaWF0IjoxNjkxMzE5MjA5LCJleHAiOjFlKzg1fQ.YCDwpTAqL97mzSWMoPdC88KquegMuO1HPRVhUUXh3iM&t=2023-08-06T10%3A53%3A30.430Z")'
             google_update_list.append(["=СТРОКА()-1",insert_image, user['full_name'], user['balance']])
         else:
-            insert_image = '=IMAGE("https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/female.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L2ZlbWFsZS5wbmciLCJpYXQiOjE2OTA3MDU5MjksImV4cCI6MTcyMjI0MTkyOX0.3Cu2WL8rZBXRxKU01M67DE_tmNmTlA0DvpeRnbbCyMc&t=2023-07-30T08%3A32%3A09.874Z")'
+            insert_image = '=IMAGE("https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/female.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L2ZlbWFsZS5qcGciLCJpYXQiOjE2OTEzMTkxNjMsImV4cCI6MWUrOTJ9.1LZXigPR8SlPd9Iuyy9ndoSqjbqQQmxiMES5YDu75VQ&t=2023-08-06T10%3A52%3A44.214Z")'
             google_update_list.append(["=СТРОКА()-1", insert_image, user['full_name'], user['balance']])
     worksheet.insert_rows(google_update_list, value_input_option="USER_ENTERED")
     worksheet.sort((4, 'des'))
