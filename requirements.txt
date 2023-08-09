@@ -8,3 +8,4 @@ google-auth-oauthlib
 gspread
 schedule
 qrcode
+pyzbar

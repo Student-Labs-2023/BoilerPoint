@@ -1,5 +1,8 @@
 from dotenv import load_dotenv
 import json
+import PIL.Image
+import io
+import pyzbar.pyzbar as pyzbar
 from aiogram import Bot, types
 from io import BytesIO
 import qrcode
@@ -863,9 +866,25 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
-    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением", reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением или отправьте боту изображение QR-кода", reply_markup=types.ReplyKeyboardRemove())
     await bot.send_message(message.chat.id, "Если хотите вернуться , то нажмите сюда", reply_markup=cancel_button_to_main)
     await MenuStates.promocodestart.set()
+
+@dp.message_handler(content_types=['photo'], state=MenuStates.promocodestart)
+async def check_qr_code(message: types.Message, state: FSMContext):
+
+  photo_bytes = await message.photo[-1].download(destination=io.BytesIO())
+  photo_bytes = photo_bytes.getvalue()
+
+  photo_image = PIL.Image.open(io.BytesIO(photo_bytes))
+
+  qr_code = pyzbar.decode(photo_image)
+
+  if qr_code:
+    qr_code = qr_code[0].data.decode()
+
+  message.text = qr_code
+  await check_promocode(message, state)
 
 @dp.message_handler(state=MenuStates.promocodestart)
 async def check_promocode(message: types.Message, state: FSMContext):
@@ -881,7 +900,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
     promocode_data = supabase.table('Promocode').select('last', 'cost').eq('promo', promocode).execute()
 
     if not promocode_data.data:
-        await message.reply("Промокод не найден!")
+        await message.reply("Промокод не найден!", reply_markup=promo_kb)
         await state.finish()
         await MenuStates.promocode.set()
         user.user_state = str(MenuStates.promocode)  # Меню стейт
@@ -894,7 +913,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
 
     if used_promocode_data.data:
         # уже использовал
-        await message.reply("Вы уже использовали этот промокод!")
+        await message.reply("Вы уже использовали этот промокод!", reply_markup=promo_kb)
         await state.finish()
         await MenuStates.promocode.set()
         user.user_state = str(MenuStates.promocode)  # Меню стейт
@@ -902,7 +921,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
         return
 
     if promocode['last'] <= 0:
-        await message.reply("Срок действия промокода истек!")
+        await message.reply("Срок действия промокода истек!", reply_markup=promo_kb)
         await state.finish()
         await MenuStates.promocode.set()
         user.user_state = str(MenuStates.promocode)  # Меню стейт
@@ -1043,7 +1062,6 @@ async def handle_calendar(message: types.Message, state: FSMContext):
     await MenuStates.waiting_for_profile.set()
     user = users.get(chat_id)
     user.user_state = str(MenuStates.calendar)
-    users.set(user)
     
 #-----------------------------------------------------------------------------------------------------------------------
 #Система тикетов для юзера
