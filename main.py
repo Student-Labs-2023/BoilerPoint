@@ -93,6 +93,8 @@ class AdminPanel(StatesGroup):
     change_user_agestart = State()
     change_user_balance = State()
     change_user_balancestart = State()
+    update_users_balance_confirm = State()
+    update_users_balance = State()
     promo_menu = State()
     promo_check_promocode = State()
     promo_addpromostart = State()
@@ -173,6 +175,37 @@ async def admin_command(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
     await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
+
+@dp.message_handler(text="❗Обнулить баланс всех пользователей❗", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
+async def update_users_balance_confirm(message: types.Message,state:FSMContext):
+    await AdminPanel.update_users_balance_confirm.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.update_users_balance)
+    users.set(user)
+    await bot.send_message(message.chat.id, '❗Внимание❗ Вы действительно хотите обнулить баланс ВСЕХ пользователей? Данное действие ОТМЕНИТЬ будет НЕВОЗМОЖНО', reply_markup=updatebalanceusers)
+    await AdminPanel.update_users_balance.set()
+
+@dp.message_handler(state=AdminPanel.update_users_balance)
+async def update_users_balance(message: types.Message,state:FSMContext):
+    await AdminPanel.update_users_balance.set()
+    select = message.text
+    if select == '❗Я действительно хочу обнулить баланс всех пользователей!❗ ВНИМАНИЕ❗Отменить данное действие будет НЕВОЗМОЖНО.❗':
+        supabase.table('UsersData_duplicate').update({'balance': 0}).neq('balance',0).execute()
+        await AdminPanel.admin_menu.set()
+        user = users.get(message.chat.id)
+        user.user_state = str(AdminPanel.admin_menu)
+        users.set(user)
+        await message.reply("Баланс всех пользователей равен 0!", reply_markup=admrkbm)
+    elif select == '⬅️Назад в меню':
+        await AdminPanel.admin_menu.set()
+        user = users.get(message.chat.id)
+        user.user_state = str(AdminPanel.admin_menu)
+        users.set(user)
+        await message.reply("Вы вернулись в панель администратора", reply_markup=admrkbm)
+    else:
+        await message.reply("Нет такого варианта, ошибка!")
+       
+
 
 # Хендлер для кнопки  ️Изменить пользователя
 @dp.message_handler(text="⚙️Изменить пользователя", state=AdminPanel.admin_menu)
@@ -786,7 +819,6 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
         if not counter_data.data:
             supabase.table('Pointer').insert({'chat_id': chat_id, 'counter': 0}).execute()
         else:
-
             supabase.table('Pointer').update({'counter': 0}).eq('chat_id', chat_id).execute()
         await MenuStates.tasks.set()
         await handle_tasks(message, state)
@@ -993,7 +1025,6 @@ async def handle_profile(message: types.Message, state: FSMContext):
         profile_message = f"Добро пожаловать в ваш профиль:\n\n" \
                           f"{gender}{pseudo}, {age} лет\n└Ваше место в топе: {counter+1}\n\n" \
                           f"💰Баланс: {balance}🔘 поинтов\n└Мероприятий посещено: ?"
-
         await bot.send_photo(chat_id=chat_id, photo=image, caption=profile_message, reply_markup=profilebuttons)
     # Обработчик нажатия на кнопку удалить профиль
     elif select == "❌Удалить профиль":
