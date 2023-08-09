@@ -9,3 +9,4 @@ gspread
 schedule
 qrcode
 pyzbar
+PIL
