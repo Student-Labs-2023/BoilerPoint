@@ -1,0 +1,20 @@
+{
+  "name": "scan-tool-webapp",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@grammyjs/web-app": "^1.2.0",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "prettier": "^2.8.1",
+    "vite": "^4.0.1",
+    "vite-plugin-vuetify": "^1.0.1",
+    "vue": "^3.2.45",
+    "vue-qrcode-reader": "^3.1.0-vue3-compatibility.5",
+    "vuetify": "^3.0.5"
+  }
+}
