@@ -20,7 +20,7 @@
 - После успешной регистрации у вас появится клавиатура пользователя 
 
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/ad4a5d4a-7319-4be8-9290-c917152474d7)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/3620173b-8d65-4363-b617-6b0b1c3ab8db)
 
 
 # Эксплуатация бота 
