@@ -18,7 +18,8 @@ class SupabaseUserRepository(UserRepository):
             item = response.data[0]
             user_data = item
             pseudo = user_data.get('full_name', 'Unknown')
-            gender = user_data.get('gender', 'Unknown')
+            gender = user_data.get('gender')
+            gender = gender if gender != None else False
             age = user_data.get('age', 'Unknown')
             balance = user_data.get('balance')
             user_state = user_data.get('user_state')
