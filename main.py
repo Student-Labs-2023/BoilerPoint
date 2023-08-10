@@ -29,8 +29,9 @@ from supabase import Client, create_client
 from codegen import *
 from funcs import show_rating, show_user_rating
 
+
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
 # Инициализация бота, диспетчера и хранилищаа состояний
 bot = Bot(token=os.getenv("TOKEN"))
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -727,20 +728,20 @@ async def start_command(message: types.Message, state: FSMContext):
 @dp.message_handler(state=RegistrationStates.waiting_for_age)
 async def handle_age(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    age = message.text
+    user_age = message.text
     try:
-        age = int(age)
+        user_age = int(user_age)
     except ValueError as e:
         await bot.send_message(chat_id, "Ваш возраст неккоректен. Возраст не должен содержать буквы!")
         print(f"Error validation age{e}")
-    if age < 12 or age > 122:
-        await bot.send_message(chat_id, "Ваш возраст неккоректен. Возраст должен лежать в диапазоне от 12 - 122")
+    if int(user_age) < 12 or int(user_age) > 122:
+        await bot.send_message(chat_id, "Ваш возраст неккоректен. Попробуйте еще раз")
         await RegistrationStates.waiting_for_age.set()
     else:
         user = users.get(chat_id)
-        user.age = age
+        user.age = user_age
         # Сохранение возраста пользователя в DTO
-        print(f"Возраст пользователя {chat_id}: {age}")
+        print(f"Возраст пользователя {chat_id}: {user_age}")
 
         # Переход к следующему состоянию "waiting_for_gender"
         await RegistrationStates.waiting_for_gender.set()

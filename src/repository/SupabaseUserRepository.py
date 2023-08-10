@@ -18,7 +18,8 @@ class SupabaseUserRepository(UserRepository):
             item = response.data[0]
             user_data = item
             pseudo = user_data.get('full_name', 'Unknown')
-            gender = user_data.get('gender', 'Unknown')
+            gender = user_data.get('gender')
+            gender = gender if gender != None else False
             age = user_data.get('age', 'Unknown')
             balance = user_data.get('balance')
             user_state = user_data.get('user_state')
@@ -32,7 +33,8 @@ class SupabaseUserRepository(UserRepository):
                 balance=balance,
                 tgusr = tgusr
             )
-        except ValueError:
+        except ValueError as e:
+            print(e)
             tgusr:str = id
             response = self.client.table(self.table_name).select('full_name','gender','age','balance','chat_id','user_state').eq('tgusr', tgusr).execute()
             item = response.data[0]
