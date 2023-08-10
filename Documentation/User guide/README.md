@@ -64,7 +64,7 @@
 
 - Кнопка служит для отображения ближайших событий и при нажатии выводит сообщения следующего типа :
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/0fe8ad4c-4f39-4953-af2c-19c14c8737c3)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/de37984d-2b9a-4821-a7ea-334194554628)
 
 
 ## Кнопка "Помощь"
