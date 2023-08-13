@@ -27,8 +27,7 @@ from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
 #from Database.DataUsers import *
 from codegen import *
-from funcs import show_rating, show_user_rating
-
+from funcs import show_rating, show_user_rating, is_dirt
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -779,7 +778,8 @@ async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
 async def handle_name(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     name = message.text
-    if name.replace(" ", "").isalpha() and len(name) < 40:
+    detector = is_dirt()
+    if name.replace(" ", "").isalpha() and len(name) < 40 and len(name) >= 5 and detector(name) == False:
         user = users.get(chat_id)
         user.full_name = name
         user.user_state = str(RegistrationStates.final_reg)  # по сути финал рег нафиг не нужен
