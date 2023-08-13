@@ -305,7 +305,8 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     admin = users.get(message.chat.id)
     admin.user_state = str(AdminPanel.change_user_end)
     users.set(admin)
-    await message.reply(f"Баланс пользователя {username} успешно обновлен на {new_balance}", reply_markup=admue)
+    new_code_balance = code(new_balance)
+    await message.reply(f"Баланс пользователя {username} успешно обновлен на {new_code_balance}🔘", reply_markup=admue, parse_mode="MarkdownV2")
 
 # Хендлер для смены фио через админа
 
@@ -349,8 +350,9 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         admin.user_state = str(AdminPanel.change_user_end)
         users.set(admin)
         users.set(userinfo)
+        new_code_fullname = code(new_fullname)
         # Отправляем сообщение об успешном обновлении
-        await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_fullname}", reply_markup=admue)
+        await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_code_fullname}", reply_markup=admue, parse_mode='MarkdownV2')
         await state.finish()
         await AdminPanel.change_user_end.set()
     else:
@@ -407,7 +409,8 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         user.user_state = str(AdminPanel.change_user_end)
         users.set(user)
         # Отправляем сообщение об успешном обновлении
-        await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_age}", reply_markup=admue)
+        new_code_age = code(new_age)
+        await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_code_age}", reply_markup=admue, parse_mode = 'MarkdownV2')
         await state.finish()
         await AdminPanel.change_user_end.set()
 
@@ -505,8 +508,10 @@ async def create_naming_promo(message: types.Message, state:FSMContext):
     name = data.get("name")
     usages = data.get("usages")
     codee = generate_naming_promo(name, usages, cost)
+    usages_code = code(usages)
+    code_cost = code(cost)
 
-    texting = (f'Промокод '+ code(f"{codee}") + f' с {usages} использованиями и ценой {cost} создан')
+    texting = (f'Промокод '+ code(f"{codee}") + f' с {usages_code} использованиями и ценой {code_cost}🔘 создан')
     await message.reply(texting, reply_markup=admpromo, parse_mode= "MarkdownV2")
     await state.finish()
     await AdminPanel.promo_menu.set()
@@ -532,8 +537,10 @@ async def create_promo(message: types.Message, state: FSMContext):
     cost = int(message.text)
 
     codee = generate_promo(usages, cost)
+    usages_code = code(usages)
+    cost_code = code(cost)
 
-    texting = (f'Промокод ' + code(f"{codee}") + f' с {usages} использованиями и ценой {cost} создан')
+    texting = (f'Промокод ' + code(f"{codee}") + f' с {usages_code} использованиями и ценой {cost_code}🔘 создан')
     await message.reply(texting, reply_markup=admpromo, parse_mode="MarkdownV2")
     await state.finish()
     await AdminPanel.promo_menu.set()
@@ -551,8 +558,8 @@ async def delete_promo(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=AdminPanel.promo_delpromo)
 async def delete_promo_handler(message: types.Message, state: FSMContext):
-    code = message.text
-    deleted = supabase.table('Promocode').delete().match({'promo': code}).execute()
+    codee = message.text
+    deleted = supabase.table('Promocode').delete().match({'promo': codee}).execute()
 
     if not deleted.data:
         # ничего не удалено
@@ -562,7 +569,8 @@ async def delete_promo_handler(message: types.Message, state: FSMContext):
         return
 
     # удаление прошло успешно
-    await message.reply(f"Промокод {code} удален", reply_markup=admpromo)
+    codee_code = code(codee)
+    await message.reply(f"Промокод {codee_code} удален", reply_markup=admpromo, parse_mode='MarkdownV2')
     await AdminPanel.promo_menu.set()
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.promo_menu)
@@ -977,7 +985,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
     expression = ''.join(random.choices(string.ascii_letters, k=8))
     supabase.table('UsedPromocode').insert({'id' : expression,'promo': poro, 'chat_id': str(chat_id)}).execute()
 
-    await message.reply(f"Ваш баланс пополнен на {promocode['cost']}!", reply_markup=promo_kb)
+    await message.reply(f"Ваш баланс пополнен на {code(promocode['cost'])}🔘\\!", reply_markup=promo_kb, parse_mode='MarkdownV2')
 
     await state.finish()
     await MenuStates.promocode.set()
@@ -1108,7 +1116,7 @@ async def handle_calendar(message: types.Message, state: FSMContext):
 async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     select = message.text
-    await bot.send_message(chat_id, f"Привет! Если у тебя есть какие-то проблемы или пожелания , то смелее нажимай на кнопку '📨Создать заявку' и администратор с радостью тебе поможет! ", reply_markup=userhelp)
+    await bot.send_message(chat_id, f"Привет\\! Если у тебя есть какие\\-то проблемы или пожелания \\, то смелее нажимай на кнопку " + f"{code('📨Создать заявку')}" + f" и администратор с радостью тебе поможет\\! ", reply_markup=userhelp, parse_mode = 'MarkdownV2')
     user = users.get(chat_id)
     user.user_state = str(MenuStates.help)
     users.set(user)
@@ -1120,6 +1128,18 @@ async def handle_help(message: types.Message, state: FSMContext):
 async def handle_help_start(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     tgu = message.from_user.username
+    if tgu == None:
+        nome = 'имени пользователя'
+        url = 'https://ru.the-hitech.net/7264375-how-to-create-a-username-on-telegram'
+        await bot.send_message(chat_id,
+                               f"У вас нет " + f"[{nome}]({url})" + f" телеграм!Укажите его в своём профиле и тогда администрация сможет вам помочь.",
+                               reply_markup=rkbm, disable_web_page_preview=True,
+                               parse_mode=types.ParseMode.MARKDOWN)
+        await MenuStates.waiting_for_profile.set()
+    else:
+
+        tgus = '@' + tgu
+
     tgus = '@' + tgu
 
     # Проверяем, есть ли у пользователя предыдущие заявки
@@ -1134,7 +1154,7 @@ async def handle_help_start(message: types.Message, state: FSMContext):
         users.set(user)
         return
 
-    await bot.send_message(chat_id, "Нажата кнопка создать заявку", reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(chat_id, "Нажмите сюда чтобы вернуться", reply_markup=types.ReplyKeyboardRemove())
     await bot.send_message(chat_id, "Распишите здесь наиподробнейшим образом какой у вас возник вопрос или пожелание!",reply_markup=cancel_button_for_user_help)
 
     user = users.get(chat_id)
@@ -1148,12 +1168,9 @@ async def handle_help_end(message: types.Message, state: FSMContext):
         chat_id = message.chat.id
         telegram_name = message.from_user.username
         tgusr = telegram_name
-        if telegram_name == None:
-            await bot.send_message(chat_id, "У вас нет имени пользователя телеграм!Укажите его в своём профиле и тогда администрация сможет вам помочь.", reply_markup=userhelp)
-            await MenuStates.help_cancel.set()
 
-        else:
-            tgusr = "@" + telegram_name
+
+        tgusr = "@" + telegram_name
 
         # Вставка в БД
         supabase.table('Report').insert({'description': Description, 'tgusr': tgusr}).execute()
