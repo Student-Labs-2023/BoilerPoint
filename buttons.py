@@ -101,7 +101,9 @@ admreport.row(admreport_back)
 userhelp = ReplyKeyboardMarkup(resize_keyboard=True)
 userhelp_back = KeyboardButton(text="⬅️Назад в меню")
 userhelp_ticket = KeyboardButton(text="📨Создать заявку")
+guide = KeyboardButton(text="?📑Руководство пользователя", web_app = WebAppInfo(url = 'https://github.com/Student-Labs-2023/BoilerPoint/blob/main/Documentation/User%20guide/README.md'))
 userhelp.row(userhelp_ticket)
+userhelp.row(guide)
 userhelp.row(userhelp_back)
 
 # admin user editor button
@@ -171,3 +173,9 @@ ikbmrating.add(ibrating)
 ikbmadminrating = InlineKeyboardMarkup(row_width=1)
 ibadminrating = InlineKeyboardButton(text="📊Админ Рейтинг",web_app = WebAppInfo(url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR__0ahX-O5SK3sS7OditV88sjG64duAF6mAW702CT3uM3Yj6z5mwsnxv-lL2vF9-H3YjlD0rtmg84N/pubhtml?gid=0&single=true'))
 ikbmadminrating.add(ibadminrating)
+
+#help buttons
+helpinlinereg = InlineKeyboardMarkup(row_width=1)
+helpinlinenaming = InlineKeyboardButton(text="Помощь", web_app = WebAppInfo(url = 'https://github.com/Student-Labs-2023/BoilerPoint/blob/main/Documentation/README.md'))
+helpinlinereg.add(helpinlinenaming)
+

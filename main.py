@@ -340,6 +340,7 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     new_fullname = message.text  # получаем новое ФИО
     chat_id = message.chat.id
     admin = users.get(chat_id)
+    detector = is_dirt()
     if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False:
         data = await state.get_data()
         username = data.get("username")  # получаем сохраненный username из данных состояния
@@ -767,7 +768,7 @@ async def handle_gender_callback(query: types.CallbackQuery, state: FSMContext):
     print(f"Пол пользователя {chat_id}: {gender}")
 
     # Запрашиваем имя пользователя
-    await query.message.reply("Введите ваше ФИО:")
+    await query.message.reply("Введите ваше ФИО:", reply_markup = helpinlinereg)
 
     # Переход к следующему состоянию "waiting_for_name"
     await RegistrationStates.waiting_for_name.set()
@@ -866,6 +867,7 @@ async def handle_waiting_for_edit_profile(message: types.Message, state: FSMCont
 async def edit_name_profile(message: types.Message, state:FSMContext):
     new_fullname = message.text  
     chat_id = message.chat.id
+    detector = is_dirt()
     if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False:
         user = users.get(chat_id)
         user.full_name = new_fullname
@@ -874,6 +876,9 @@ async def edit_name_profile(message: types.Message, state:FSMContext):
         await message.reply(f"Имя успешно обновлено на : {new_fullname}", reply_markup=rkbm)
         await state.finish()
         await MenuStates.waiting_for_profile.set()
+    else:
+        await message.reply("Ваше имя неккоректно. Введите корректно свое ФИО")
+        await ProlfileStates.edit_profile_name.set()
 
 @dp.message_handler(state=ProlfileStates.edit_profile_age)
 async def edit_age_profile(message: types.Message, state: FSMContext):
