@@ -340,7 +340,7 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     new_fullname = message.text  # получаем новое ФИО
     chat_id = message.chat.id
     admin = users.get(chat_id)
-    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40:
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False:
         data = await state.get_data()
         username = data.get("username")  # получаем сохраненный username из данных состояния
         userinfo = users.get(username)
@@ -866,7 +866,7 @@ async def handle_waiting_for_edit_profile(message: types.Message, state: FSMCont
 async def edit_name_profile(message: types.Message, state:FSMContext):
     new_fullname = message.text  
     chat_id = message.chat.id
-    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40:
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False:
         user = users.get(chat_id)
         user.full_name = new_fullname
         user.user_state = str(ProlfileStates.edit_profile_name)
