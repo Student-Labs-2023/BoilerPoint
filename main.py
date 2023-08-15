@@ -347,7 +347,7 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     for word in range(len(FIO)):
         if FIO[word][0].istitle():
             cnt += 1
-    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 12 and detector(new_fullname) == False and cnt == len(FIO):
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False and cnt == len(FIO):
         data = await state.get_data()
         username = data.get("username")  # получаем сохраненный username из данных состояния
         userinfo = users.get(username)
@@ -795,7 +795,7 @@ async def handle_name(message: types.Message, state: FSMContext):
     for word in range(len(FIO)):
         if FIO[word][0].istitle():
             cnt += 1
-    if name.replace(" ", "").isalpha() and len(name) < 40 and len(name) >= 12 and detector(name) == False and cnt == len(FIO):
+    if name.replace(" ", "").isalpha() and len(name) < 40 and len(name) >= 5 and detector(name) == False and cnt == len(FIO):
         user = users.get(chat_id)
         user.full_name = name
         user.user_state = str(RegistrationStates.final_reg)  # по сути финал рег нафиг не нужен
@@ -888,7 +888,7 @@ async def edit_name_profile(message: types.Message, state:FSMContext):
     for word in range(len(FIO)):
         if FIO[word][0].istitle():
             cnt += 1
-    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 12 and detector(new_fullname) == False and cnt == len(FIO):
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False and cnt == len(FIO):
         user = users.get(chat_id)
         user.full_name = new_fullname
         user.user_state = str(ProlfileStates.edit_profile_name)
