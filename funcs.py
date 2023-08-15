@@ -43,7 +43,7 @@ async def show_user_rating(chat_id: int):
 # Validation BAD words
 
 standart_dirt = [1093, 1091, 1081, 124, 1073, 1083, 1103, 124, 1077, 1073, 124, 
-                 1087, 1080, 1079, 1076, 124, 1105, 1073] # censored
+                 1087, 1080, 1079, 1076, 124, 1105, 1073, 124, 1079, 1072, 1083, 1091, 1087] # censored
 
 standart_dirt = ''.join(chr(n) for n in standart_dirt)
 

@@ -342,7 +342,12 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
     chat_id = message.chat.id
     admin = users.get(chat_id)
     detector = is_dirt()
-    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False:
+    cnt = 0
+    FIO = new_fullname.split()
+    for word in range(len(FIO)):
+        if FIO[word][0].istitle():
+            cnt += 1
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 12 and detector(new_fullname) == False and cnt == len(FIO):
         data = await state.get_data()
         username = data.get("username")  # получаем сохраненный username из данных состояния
         userinfo = users.get(username)
@@ -350,8 +355,8 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         admin.user_state = str(AdminPanel.change_user_end)
         users.set(admin)
         users.set(userinfo)
-        new_code_fullname = code(new_fullname)
         # Отправляем сообщение об успешном обновлении
+        new_code_fullname = code(new_fullname)
         await message.reply(f"ФИО пользователя {username} успешно обновлено на {new_code_fullname}", reply_markup=admue, parse_mode='MarkdownV2')
         await state.finish()
         await AdminPanel.change_user_end.set()
@@ -410,7 +415,7 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         users.set(user)
         # Отправляем сообщение об успешном обновлении
         new_code_age = code(new_age)
-        await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_code_age}", reply_markup=admue, parse_mode = 'MarkdownV2')
+        await message.reply(f"Возраст пользователя {username} успешно обновлен на {new_code_age}", reply_markup=admue, parse_mode='MarkdownV2')
         await state.finish()
         await AdminPanel.change_user_end.set()
 
@@ -510,7 +515,6 @@ async def create_naming_promo(message: types.Message, state:FSMContext):
     codee = generate_naming_promo(name, usages, cost)
     usages_code = code(usages)
     code_cost = code(cost)
-
     texting = (f'Промокод '+ code(f"{codee}") + f' с {usages_code} использованиями и ценой {code_cost}🔘 создан')
     await message.reply(texting, reply_markup=admpromo, parse_mode= "MarkdownV2")
     await state.finish()
@@ -535,11 +539,9 @@ async def create_promo(message: types.Message, state: FSMContext):
     data = await state.get_data()
     usages = data.get("usages")
     cost = int(message.text)
-
     codee = generate_promo(usages, cost)
     usages_code = code(usages)
     cost_code = code(cost)
-
     texting = (f'Промокод ' + code(f"{codee}") + f' с {usages_code} использованиями и ценой {cost_code}🔘 создан')
     await message.reply(texting, reply_markup=admpromo, parse_mode="MarkdownV2")
     await state.finish()
@@ -788,7 +790,12 @@ async def handle_name(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     name = message.text
     detector = is_dirt()
-    if name.replace(" ", "").isalpha() and len(name) < 40 and len(name) >= 5 and detector(name) == False:
+    FIO = name.split()
+    cnt = 0
+    for word in range(len(FIO)):
+        if FIO[word][0].istitle():
+            cnt += 1
+    if name.replace(" ", "").isalpha() and len(name) < 40 and len(name) >= 12 and detector(name) == False and cnt == len(FIO):
         user = users.get(chat_id)
         user.full_name = name
         user.user_state = str(RegistrationStates.final_reg)  # по сути финал рег нафиг не нужен
@@ -876,7 +883,12 @@ async def edit_name_profile(message: types.Message, state:FSMContext):
     new_fullname = message.text  
     chat_id = message.chat.id
     detector = is_dirt()
-    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 5 and detector(new_fullname) == False:
+    FIO = new_fullname.split()
+    cnt = 0
+    for word in range(len(FIO)):
+        if FIO[word][0].istitle():
+            cnt += 1
+    if new_fullname.replace(" ", "").isalpha() and len(new_fullname) < 40 and len(new_fullname) >= 12 and detector(new_fullname) == False and cnt == len(FIO):
         user = users.get(chat_id)
         user.full_name = new_fullname
         user.user_state = str(ProlfileStates.edit_profile_name)
@@ -885,7 +897,7 @@ async def edit_name_profile(message: types.Message, state:FSMContext):
         await state.finish()
         await MenuStates.waiting_for_profile.set()
     else:
-        await message.reply("Ваше имя неккоректно. Введите корректно свое ФИО")
+        await bot.send_message(chat_id, f"Пожалуйста, введите корректно свое ФИО, например: Иванов Иван Иванович")
         await ProlfileStates.edit_profile_name.set()
 
 @dp.message_handler(state=ProlfileStates.edit_profile_age)
@@ -1137,11 +1149,8 @@ async def handle_help_start(message: types.Message, state: FSMContext):
                                parse_mode=types.ParseMode.MARKDOWN)
         await MenuStates.waiting_for_profile.set()
     else:
-
         tgus = '@' + tgu
-
     tgus = '@' + tgu
-
     # Проверяем, есть ли у пользователя предыдущие заявки
     existing_reports = supabase.table('Report').select('tgusr').eq('tgusr', tgus).execute()
     if existing_reports.data:
@@ -1168,7 +1177,6 @@ async def handle_help_end(message: types.Message, state: FSMContext):
         chat_id = message.chat.id
         telegram_name = message.from_user.username
         tgusr = telegram_name
-
 
         tgusr = "@" + telegram_name
 
