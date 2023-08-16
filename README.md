@@ -31,7 +31,7 @@ pip install requirements.txt
 
 - Зарегистрируйтесь в SupaBase и пришлите мне в телеграм (t.me/whitehodok) e-mail на который вы зарегистрировались
   
-- Получите у меня в телеграме (t.me/whitehodok) наш .env
+- Получите у меня в телеграме (t.me/whitehodok) наш .env файл
   
 - Получите у меня в телеграме (t.me/whitehodok) наш credentials.json
 
