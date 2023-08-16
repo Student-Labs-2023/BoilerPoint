@@ -41,11 +41,16 @@ url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 
 supabase: Client = create_client(url, key)
-table_name = "UsersData"
+
 
 users: UserRepository = SupabaseUserRepository(supabase)
 
-# Состояния регистрации
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Все состояния в которых может пребывать пользователь/админ бота
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 class RegistrationStates(StatesGroup):
     waiting_for_age = State()
     waiting_for_gender = State()
@@ -176,6 +181,12 @@ async def admin_command(message: types.Message, state: FSMContext):
     users.set(user)
     await message.reply("Вы вошли в панель администратора", reply_markup=admrkbm)
 
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система обнуления баланса пользователя
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="❗Обнулить баланс всех пользователей❗", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def update_users_balance_confirm(message: types.Message,state:FSMContext):
     await AdminPanel.update_users_balance_confirm.set()
@@ -218,6 +229,12 @@ async def admin_change_user(message: types.Message, state: FSMContext):
         "Вы попали в меню редактирования пользователя, нажмите нужную вам кнопку чтобы изменить параметры пользователя. После нажатия на кнопку введите @username человека в телеграм чтобы поменять его параметры.",
         reply_markup=admue)
 
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система получения информации о пользователе
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="Получить информацию о пользователе", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_get_user_info(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -227,6 +244,7 @@ async def admin_get_user_info(message: types.Message, state: FSMContext):
     await message.reply("Для отмены действия, нажмите кнопку отмена", reply_markup=InlineKeyboardMarkup().add(cancel_button))
     await AdminPanel.get_info_about_user.set()
     users.set(user)
+
 
 @dp.message_handler(state=AdminPanel.get_info_about_user)
 async def admin_get_user_info_start(message: types.Message, state: FSMContext):
@@ -266,6 +284,12 @@ async def admin_get_user_info_start(message: types.Message, state: FSMContext):
         user.user_state = str(AdminPanel.change_user_start)
         users.set(user)
     
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система редактирования баланса пользователя
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="Изменить баланс", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_balance(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_balancestart.set()
@@ -278,7 +302,6 @@ async def admin_change_user_balance(message: types.Message, state: FSMContext):
 async def admin_change_user_balance_handler(message: types.Message, state: FSMContext):
     username = message.text  # получаем username
     try:
-        userinfo = users.get(username)
         await state.update_data(username=username)
         await AdminPanel.change_user_balance.set()
         await message.reply("Введите новый баланс пользователя", reply_markup=InlineKeyboardMarkup().add(cancel_button))
@@ -308,7 +331,11 @@ async def admin_change_user_balance_handler(message: types.Message, state: FSMCo
     new_code_balance = code(new_balance)
     await message.reply(f"Баланс пользователя {username} успешно обновлен на {new_code_balance}🔘", reply_markup=admue, parse_mode="MarkdownV2")
 
-# Хендлер для смены фио через админа
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система редактирования ФИО пользователя
+#-----------------------------------------------------------------------------------------------------------------------
+
 
 @dp.message_handler(text="Изменить ФИО", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_fullname(message: types.Message, state: FSMContext):
@@ -367,7 +394,12 @@ async def admin_change_user_fullname_handler(message: types.Message, state: FSMC
         user.user_state = str(AdminPanel.change_user_fullname)
         users.set(user)
 
-# Хендлер для смены возраста через админ меню
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система редактирования возраста пользователя
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="Изменить возраст", state=[AdminPanel.change_user_start, AdminPanel.change_user_end])
 async def admin_change_user_age(message: types.Message, state: FSMContext):
     await AdminPanel.change_user_age.set()
@@ -419,7 +451,12 @@ async def admin_change_user_age_handler(message: types.Message, state: FSMContex
         await state.finish()
         await AdminPanel.change_user_end.set()
 
-# Хендлер для входа в меню промокодов
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система промокодов
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="🗝️Промокоды", state=AdminPanel.admin_menu)
 async def admin_promocodes(message: types.Message, state: FSMContext):
     await AdminPanel.promo_menu.set()
@@ -586,6 +623,12 @@ async def admin_backtomenu(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
 
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система прав
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="👨‍🚀Организаторы", state=AdminPanel.admin_menu)
 async def give_ruleskbm(message: types.Message, state:FSMContext):
     await AdminPanel.rules.set()
@@ -598,7 +641,6 @@ async def give_ruleskbm(message: types.Message, state:FSMContext):
 async def give_rules(message: types.Message, state: FSMContext):
     await AdminPanel.rules_addmaker.set()
     await message.reply("Введите @username пользователя которому хотите выдать права ивент мейкера", reply_markup=types.ReplyKeyboardRemove())
-
 
 @dp.message_handler(state=AdminPanel.rules_addmaker)
 async def give_rules_start(message: types.Message, state: FSMContext):
@@ -696,6 +738,12 @@ async def admin_menu_back(message: types.Message, state: FSMContext):
     users.set(user)
     await message.reply("Вы вышли из панели администратора", reply_markup=rkbm)
 
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система админ рейтинга
+#-----------------------------------------------------------------------------------------------------------------------
+
+
 @dp.message_handler(text="📊Рейтинг", state=AdminPanel.admin_menu)
 async def admin_rating_board(message: types.Message, state: FSMContext):
     await AdminPanel.rating_board.set()
@@ -707,6 +755,12 @@ async def admin_rating_board(message: types.Message, state: FSMContext):
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Система регистрации
+#----------------------------------------------------------------------------------------------------------------------- 
+
 
 @dp.message_handler(Command('start'), state=None)
 async def start_command(message: types.Message, state: FSMContext):
@@ -798,7 +852,7 @@ async def handle_name(message: types.Message, state: FSMContext):
     if name.replace(" ", "").isalpha() and len(name) < 40 and len(name) >= 5 and detector(name) == False and cnt == len(FIO):
         user = users.get(chat_id)
         user.full_name = name
-        user.user_state = str(RegistrationStates.final_reg)  # по сути финал рег нафиг не нужен
+        user.user_state = str(RegistrationStates.final_reg)  
         users.set(user)
 
         print(f"Имя пользователя {chat_id}: {name}")
@@ -814,6 +868,12 @@ async def handle_name(message: types.Message, state: FSMContext):
     else:
         await bot.send_message(chat_id, f"Пожалуйста, введите корректно свое ФИО")
         await RegistrationStates.waiting_for_name.set()
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Кнопкни главного меню
+#----------------------------------------------------------------------------------------------------------------------- 
+
 
 @dp.message_handler(state=MenuStates.waiting_for_profile)
 async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
@@ -859,6 +919,12 @@ async def cancel_action(call: types.CallbackQuery, state: FSMContext):
 async def cancel_action(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Действие отменено, вы вернулись в меню помощи.", reply_markup=userhelp)
     await MenuStates.help_cancel.set()
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Система редактирования профиля
+#----------------------------------------------------------------------------------------------------------------------- 
+
 
 @dp.message_handler(state=ProlfileStates.edit_profile)
 async def handle_waiting_for_edit_profile(message: types.Message, state: FSMContext):
@@ -922,6 +988,12 @@ async def edit_age_profile(message: types.Message, state: FSMContext):
         await state.finish()
         await MenuStates.waiting_for_profile.set()
 
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Система промокодов
+#----------------------------------------------------------------------------------------------------------------------- 
+
+
 @dp.message_handler(text="🗝️Ввести промокод", state=MenuStates.promocode)
 async def enter_promocode(message: types.Message):
     await bot.send_message(message.chat.id, "Введите , пожалуйста , ваш промокод сообщением или отправьте боту изображение QR-кода", reply_markup=types.ReplyKeyboardRemove())
@@ -951,9 +1023,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
     poro = promocode
 
     user = users.get(chat_id)
-    balance_result = supabase.table('UsersData').select('balance').eq('chat_id', chat_id).execute()
-    bal = balance_result.data[0]['balance']
-    balance = int(bal)
+    user_balance = user.balance
 
     promocode_data = supabase.table('Promocode').select('last', 'cost').eq('promo', promocode).execute()
 
@@ -986,8 +1056,7 @@ async def check_promocode(message: types.Message, state: FSMContext):
         users.set(user)
         return
 
-    new_balance = balance + promocode['cost']
-    print(new_balance)
+    new_balance = user_balance + promocode['cost']
 
     new_last = promocode['last'] - 1
     
@@ -1010,6 +1079,11 @@ async def back_from_promo_menu(message: types.Message, state: FSMContext):
     await bot.send_message(message.chat.id, "Вы вернулись в главное меню", reply_markup=rkbm)
 
 
+#-----------------------------------------------------------------------------------------------------------------------
+#Система рейтинга(Google sheets)
+#----------------------------------------------------------------------------------------------------------------------- 
+
+
 @dp.message_handler(text ="📊Рейтинг", state=MenuStates.waiting_for_profile)
 async def user_rating_board(message: types.Message, state: FSMContext):
     await MenuStates.rating.set()
@@ -1023,7 +1097,7 @@ async def user_rating_board(message: types.Message, state: FSMContext):
     users.set(user)
 
 #-----------------------------------------------------------------------------------------------------------------------
-#Система отображения/удаления профиля
+#Система отображения профиля
 #-----------------------------------------------------------------------------------------------------------------------
 
 @dp.message_handler(state=MenuStates.profile)
@@ -1065,7 +1139,13 @@ async def handle_profile(message: types.Message, state: FSMContext):
     
     else:
         await bot.send_message(chat_id, "Некорректный выбор.")
-    
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+#Система удаления профиля
+#----------------------------------------------------------------------------------------------------------------------- 
+
+   
 @dp.message_handler(state=ProlfileStates.delete_profile)
 async def del_profile(message: types.Message, state: FSMContext):
     select = message.text
@@ -1094,10 +1174,12 @@ async def del_profile(message: types.Message, state: FSMContext):
         await MenuStates.waiting_for_profile.set()
         await bot.send_message(chat_id, "Некорректный выбор, вы вернулись в меню!", reply_markup=rkbm)
 
+
 #-----------------------------------------------------------------------------------------------------------------------
 #Система отображения мероприятий
 #-----------------------------------------------------------------------------------------------------------------------
     
+
 @dp.message_handler(state=MenuStates.calendar)
 async def handle_calendar(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -1127,7 +1209,6 @@ async def handle_calendar(message: types.Message, state: FSMContext):
 @dp.message_handler(state=MenuStates.help)
 async def handle_help(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    select = message.text
     await bot.send_message(chat_id, f"Привет\\! Если у тебя есть какие\\-то проблемы или пожелания \\, то смелее нажимай на кнопку " + f"{code('📨Создать заявку')}" + f" и администратор с радостью тебе поможет\\! ", reply_markup=userhelp, parse_mode = 'MarkdownV2')
     user = users.get(chat_id)
     user.user_state = str(MenuStates.help)
@@ -1362,9 +1443,10 @@ async def answer( call: types.CallbackQuery, state: FSMContext):
         await bot.send_message(chat_id, "Вы ошиблись!")
     await MenuStates.waiting_for_profile.set()
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-#-----------------------------------------------------------------------------------------------------------------------
-#Система заданий
-#-----------------------------------------------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------------------------------------------------
+#Система отлова людей без state и обработчик стикеров
+#------------------------------------------------------------------------------------------------------------------------
 
 # Ответ на отправку стикера
 @dp.message_handler(content_types=types.ContentType.STICKER, state="*")
