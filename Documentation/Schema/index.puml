@@ -1,66 +1,51 @@
-@startuml
-!theme spacelab
+@startuml Foobr-System
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
-
-!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
-!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
-!include DEVICONS/angular.puml
-!include DEVICONS/java.puml
-!include DEVICONS/msql_server.puml
-!include FONTAWESOME/users.puml
-!include DEVICONS/python.puml
-!include DEVICONS/javascript.puml
-!include DEVICONS/google_drive.puml
-
 
 LAYOUT_WITH_LEGEND()
 
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!include DEVICONS/python.puml
+!include DEVICONS/database.puml
+!include DEVICONS/javascript.puml
 
-System_Ext(Google_sheets, "Google Sheets", "Рейтинговая таблица пользователей", $sprite="google_drive")
-System_Ext(Google_sheets_adm, "Google Sheets Admin", "Рейтинговая таблица пользователей для админа", $sprite="google_drive")
-System_Ext(telegram, "Telegram", "Telegram API")
-System_Ext(leaderid, "LeaderID", "LeaderID API")
+left to right direction
 
-System_Boundary(a1, "Telegram Bot") {
-    Container(tgbot, "Телеграм бот на aiogram", "python, aiogram ", "Непосредственно сам бот", $sprite="python")
-    Person(user, "User", "Пользователи бота, которые могут зарегистрироваться в боте, удалить свой профиль, выполнять задания за которые получают баллы, сканировать и вводить QR или промокоды, за которые получают баллы или оставлять обращение для администрации,также смотреть ближайшие ивенты в Точке Кипения", $sprite="users")
-Person(admin, "Admin", "Администраторы бота, которые могут делать CRUD с профилем любого пользователя, CRUD коллекции опросов с заданиями, CRUD промокоды, CRUD права", $sprite="users")
-Person(eventmaker, "eventmaker" , "Создатели ивентов, которые могут создавать/редактировать свои мероприятия за которые пользователи получат баллы" , $sprite="users")
+Person(user, "User", "Boiling point visitor")
+Person(admin, "Administrator", "Boiling point admin")
 
-
-System(leaderid_syncronizer, "LeaderID", "Синхронизатор мероприятий с LeaderID", $sprite="javascript")
-System(qr_scanner, "QR scanner", "Веб-приложение для скана QR кодов внутри бота", $sprite="javascript")
-System(survey, "Survey web app", "Веб-приложение CRUD внутри бота для опросов", $sprite="javascript")
+System_Boundary(bpb, "Boiling Point Bot") {
+    Container(bot, "Boiling Point Bot", "Python/Aiogram", "Perform main buisness logic", $sprite="python")
+    ContainerDb(db, "Database", "Supabase", "Contain info about users, events, they relations, etc.", $sprite="database")
+    Container(scanner, "QR Scanner", "Vue/grammyjs","QR Code Scanner Telegram Web Application", $sprite="javascript")
+    Container(form_reader, "Forms", "Quasar", "Form walkthrough Telegram Web Application", $sprite="javascript")
+    Container(form_writer, "Forms Creator", "Quasar", "Form creation Telegram Web Application", $sprite="javascript")
+    Container(event_sync, "Event Syncronizer", "Typescipt", "Cron, used for synchronization of the leader id events with database", $sprite="javascript")
 }
 
-System_Boundary(a1, "SupaBase") {
-    Container(db, "База данных", "PostgreSQL", "База данных", $sprite="msql_server")
-}
+System_Ext(leaderid, "Leader ID", "Provide info about events, users, etc.")
+System_Ext(telegram, "Telegram", "Telegram Domain")
+System_Ext(sheets, "Google Sheets", "Google Sheets Api")
 
-Rel(leaderid, leaderid_syncronizer,"Uses", "API + JSON response")
-Rel(leaderid_syncronizer, leaderid,"Uses", "API + JSON response")
-Rel(leaderid_syncronizer, db, "Uses", "Разбирает JSON на текст и отправляет в Supabase, при этом стирая оттуда старые записи и добавляя новые")
+Rel(user, telegram, "Using to participate in events, saw profile, users top and work with promos", "Telegram/Web App")
+Rel(user, scanner, "Using to scan promo QR Codes", "HTTPS")
+Rel(user, form_reader, "Using to complete event forms", "HTTPS")
 
-Rel(tgbot, telegram, "Uses", "API по которому передаётся response от бота")
-Rel(telegram, tgbot, "Uses", "API по которому передаётся response от телеграма")
+Rel(telegram, bot, "Using to pass requests to bot", "HTTPS/Webhook")
 
-Rel(tgbot, Google_sheets , "Uses", "API по которому передаётся JSON запрос через gspreads")
-Rel(tgbot, Google_sheets_adm , "Uses", "API по которому передаётся JSON запрос через gspreads")
+Rel(admin, telegram, "Using to CRUD users, events, etc.", "Telegram/Web App")
+Rel(admin, form_writer, "Using to create forms", "HTTPS")
+Rel(admin, db, "Using to add some files, CRUD info", "HTTPS/Supabase UI")
 
-Rel(survey, db , "Uses", "API по которому передаётся JSON запрос для помещения коллекции заданий")
-Rel(tgbot, survey, "Uses", "Общение с Web App(JSON) по которому можно CRUD опросы + получить за них баллы")
+Rel(bot, sheets, "Using to update raiting sheet")
 
-Rel(tgbot, db, "Uses", "Общение с БД с помощью Supabase API , где передаётся response в виде JSON с помощью бота")
-Rel(db, tgbot, "Uses", "Общение с ботом с помощью Supabase API, где боту возвращается response в виде JSON от БД")
+Rel(form_reader, telegram, "Using, to push user answers to bot", "HTTPS")
+Rel(form_writer, telegram, "Using to push created form to bot", "HTTPS")
+Rel(scanner, telegram, "Using to push promo to bot", "HTTPS")
 
-Rel(qr_scanner, tgbot, "Uses", "Общение с ботом с помощью JSON")
+Rel(bot, db, "Using to CRUD info about users, events, etc. Work with files (i. e. images)", "HTTPS/supabase-py")
 
-Rel(user, tgbot, "Uses" , "text+image")
-Rel(tgbot,user, "Uses" , "text+image")
 
-Rel(admin, tgbot, "Uses", "text+image")
-Rel(tgbot, admin, "Uses", "text+image")
+Rel(event_sync, db, "Using to write events from Leader ID to database", "HTTPS/supabase-js")
+Rel(event_sync, leaderid, "Using to synchronize info about events", "sync,HTTPS/Rest")
 
-Rel(eventmaker, tgbot, "Uses" , "text+image")
-Rel(tgbot, eventmaker,"Uses" , "text+image")
 @enduml
