@@ -37,7 +37,7 @@ pip install requirements.txt
 
 # Схема проекта на текущий момент
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/0a395e2d-d5e6-4de8-bc96-d610544a4c27)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/4d650dd7-3668-4e6a-995e-ef44bae2e658)
 
 
 # Схема базы данных на текущий момент
