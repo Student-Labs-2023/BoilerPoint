@@ -129,6 +129,11 @@ class AdminPanel(StatesGroup):
     rules_addmaker_start = State()
     rules_delmaker = State()
     rules_delmaker_start = State()
+    taskmenu = State()
+    taskmenu_namewait = State()
+    taskmenu_descriptionwait = State()
+    taskmenu_photowait = State()
+    taskmenu_collection_counterwait = State()
 
 class EventMakerPanel(StatesGroup):
     menu = State()
@@ -757,6 +762,72 @@ async def admin_rating_board(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.admin_menu)
     users.set(user)
 
+#-----------------------------------------------------------------------------------------------------------------------
+# Система заданий
+#-----------------------------------------------------------------------------------------------------------------------
+
+@dp.message_handler(text="📝Создать задание", state=AdminPanel.admin_menu)
+async def admin_task_maker(message: types.Message, state: FSMContext):
+    await message.reply("Вы вошли в редактор заданий", reply_markup=admtasks)
+    await AdminPanel.taskmenu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.taskmenu)
+    users.set(user)
+
+@dp.message_handler(text="Создать коллекцию", state=AdminPanel.taskmenu)
+async def admin_make(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    await bot.send_message(chat_id,f"Введите название коллекции заданий:", reply_markup=types.ReplyKeyboardRemove())
+    await AdminPanel.taskmenu_namewait.set()
+
+@dp.message_handler(state=AdminPanel.taskmenu_namewait)
+async def admin_taskmenu_namewait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    name = message.text
+    await bot.send_message(chat_id, "Введите описание коллекции заданий:")
+    await state.update_data(name=name)
+    await AdminPanel.taskmenu_descriptionwait.set()
+
+@dp.message_handler(state=AdminPanel.taskmenu_descriptionwait)
+async def admin_taskmenu_descriptionwait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    description = message.text
+    await bot.send_message(chat_id, "Отправте фотографию мероприятия:")
+    await state.update_data(description = description)
+    await AdminPanel.taskmenu_photowait.set()
+
+@dp.message_handler(content_types= types.ContentType.PHOTO, state = AdminPanel.taskmenu_photowait)
+async def admin_taskmenu_photowait(message: types.Message , state: FSMContext):
+    chat_id = message.chat.id
+    data = await state.get_data()
+    photo = message
+    name = data.get("name")
+    description = data.get("description")
+    supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo.photo[2].file_id}).execute()
+    await state.finish()
+    await AdminPanel.taskmenu.set()
+    await bot.send_message(chat_id, "Коллекция создана успешно!", reply_markup=admtasks)
+
+#@dp.message_handler(state=AdminPanel.taskmenu_collection_counterwait)
+#async def admin_taskmenu_collection_counterwait(message: types.Message, state: FSMContext):
+    #chat_id = message.chat.id
+    #counter = int(message.text) # Тут надо подключить валидацию на интовое значение!!!
+    #data = await state.get_data()
+    #name = data.get("name")
+    #description = data.get("description")
+    #photo = data.get("photo")
+    #supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo}).execute()
+    #await state.finish()
+    #await AdminPanel.admin_menu.set()
+    #await bot.send_message(chat_id,"Коллекция создана успешно!",reply_markup=admrkbm)
+
+@dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
+async def back_from_rules(message: types.Message, state: FSMContext):
+    await message.reply("Вы вернулись в админ меню", reply_markup=admrkbm)
+    await AdminPanel.admin_menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.admin_menu)
+    users.set(user)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Система регистрации
@@ -893,13 +964,8 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
         await MenuStates.calendar.set()
         await handle_calendar(message, state)
     elif select == "📝Задания":
-        counter_data = supabase.table('Pointer').select('chat_id').eq('chat_id', chat_id).execute()
-        if not counter_data.data:
-            supabase.table('Pointer').insert({'chat_id': chat_id, 'counter': 0}).execute()
-        else:
-            supabase.table('Pointer').update({'counter': 0}).eq('chat_id', chat_id).execute()
-        await MenuStates.tasks.set()
-        await handle_tasks(message, state)
+        await MenuStates.waiting_for_profile.set()
+        await handle_tasks(message, state, 0)
     elif select == "🗝️Промокоды":
         await MenuStates.promocode.set()
         await bot.send_message(chat_id, "Вы попали в меню работы с промокодами", reply_markup=promo_kb)
@@ -1365,85 +1431,49 @@ async def handle_tickets_back(message: types.Message, state: FSMContext):
 #Система заданий
 #-----------------------------------------------------------------------------------------------------------------------
 
-@dp.message_handler(state=MenuStates.tasks) #Вывод коллекции заданий (1 рубеж) AdminTasks
-async def handle_tasks(message: types.Message, state: FSMContext):
+@dp.message_handler(state=MenuStates.waiting_for_profile) #Вывод коллекции заданий (1 рубеж) AdminTasks
+async def handle_tasks(message: types.Message, state: FSMContext, counter):
     chat_id = message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute().data[0]['counter']
-    task = supabase.table('AdminTasks').select('name','description').eq('counter', counter).execute().data[0]
+    await state.update_data(counter = counter)
+    task = supabase.table('TaskCollection').select('name','description','photo').execute().data[int(counter)]
     text = f"{counter}.{task['name']}\n{task['description']}"
-    await bot.send_photo(chat_id, "https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/BoilerPoint.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L0JvaWxlclBvaW50LmpwZyIsImlhdCI6MTY5MDg4MjU1NiwiZXhwIjoxNzIyNDE4NTU2fQ.-AMp6dtQcRWE9JIV0JDR1GOMZ1ldE7LCAQxr27l2Szo&t=2023-08-01T09%3A35%3A58.287Z", text, reply_markup= ikbmtasks)
-
-    user = users.get(chat_id)
-    user.user_state = str(MenuStates.tasks)
-    users.set(user)
-    await MenuStates.waiting_for_profile.set()
+    await bot.send_photo(chat_id, task['photo'] , text, reply_markup= ikbmtasks)
 
 @dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile) #кнопка вправо 1 рубеж
 async def right(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
-    counter = counter.data[0]['counter'] + 1
-    if counter>supabase.table('AdminTasks').select('counter' ).order('counter', desc = True).limit(1).execute().data[0]['counter']:
+    data = await state.get_data()
+    counter = data.get('counter')+1
+    if counter>len(supabase.table('TaskCollection').select('name' ).execute().data)-1:
         counter = 0
-    supabase.table('Pointer').update({'counter' : counter}).eq('chat_id', chat_id).execute()
+    await state.update_data(counter = counter)
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await handle_tasks(call.message, state)
+    await handle_tasks(call.message, state, counter)
 
 @dp.callback_query_handler(text="left", state=MenuStates.waiting_for_profile) # кнопка влево 1 рубеж
 async def left(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
-    counter = counter.data[0]['counter'] - 1
-    if counter<0:
-        counter = supabase.table('AdminTasks').select('counter' ).order('counter', desc = True).limit(1).execute().data[0]['counter']
-    supabase.table('Pointer').update({'counter' : counter}).eq('chat_id', chat_id).execute()
+    data = await state.get_data()
+    counter = data.get('counter') - 1
+    if counter < 0:
+        counter = len(supabase.table('TaskCollection').select('name').execute().data) - 1
+    await state.update_data(counter=counter)
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await handle_tasks(call.message, state)
+    await handle_tasks(call.message, state, counter)
 
 @dp.callback_query_handler(text="go", state=MenuStates.waiting_for_profile) #Человек выбрал задание и перешел в выбор вопроса # переход ко 2 рубежу # отображение 2 рубежа вариантов вопросов внутри коллекции заданий
 async def go(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute()
-    counter = counter.data[0]['counter']
-    counter = 0
-    question_list = supabase.table('AdminQuestion').select('question' ).eq('counter', counter).order('number', desc = False).execute().data
-    ikq = InlineKeyboardMarkup(row_width=1)
-    for keynomber in range(len(question_list)):
-        Rkey = InlineKeyboardButton(text=str(question_list[keynomber]["question"]), callback_data=keynomber)
-        ikq.row(Rkey)
+    data = await state.get_data()
+    counter = data.get('counter')
+    #question_list = supabase.table('AdminQuestion').select('question' ).eq('counter', counter).order('number', desc = False).execute().data
+    #ikq = InlineKeyboardMarkup(row_width=1)
+    #for keynomber in range(len(question_list)):
+        #Rkey = InlineKeyboardButton(text=str(question_list[keynomber]["question"]), callback_data=keynomber)
+        #ikq.row(Rkey)
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
+    #await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
     await MenuStates.waiting_for_profile.set()
-
-@dp.callback_query_handler(text=[0,1,2,3,4,5,6,7], state=MenuStates.waiting_for_profile) #Человек выбрал вопрос, отображение вариантов ответов внутри вопроса
-async def question( call: types.CallbackQuery, state: FSMContext):
-    message = call.data
-    chat_id = call.message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute().data[0]['counter']
-    counter = 0
-    question_text = supabase.table('AdminQuestion').select('questionfull' ).eq('counter', counter).order('number', desc = False).execute().data[int(message)]
-    answer_list = supabase.table('AdminAnswerOptions').select('answer').eq('counter', counter).execute().data
-    ikanswer = InlineKeyboardMarkup(row_width=1)
-    for keynomber in range(len(answer_list)):
-        Rkey = InlineKeyboardButton(text=str(answer_list[keynomber]['answer']), callback_data=f'A{keynomber}')
-        ikanswer.row(Rkey)
-    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await bot.send_photo(chat_id, "https://qdsibpkizystoiqpvoxo.supabase.co/storage/v1/object/sign/static/bot/BoilerPoint.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGF0aWMvYm90L0JvaWxlclBvaW50LmpwZyIsImlhdCI6MTY5MDg4MjU1NiwiZXhwIjoxNzIyNDE4NTU2fQ.-AMp6dtQcRWE9JIV0JDR1GOMZ1ldE7LCAQxr27l2Szo&t=2023-08-01T09%3A35%3A58.287Z", question_text['questionfull'], reply_markup=ikanswer)
-    await MenuStates.waiting_for_profile.set()
-
-@dp.callback_query_handler(text=["A0","A1","A2","A3",], state=MenuStates.waiting_for_profile) # выбор варианта ответа и результат
-async def answer( call: types.CallbackQuery, state: FSMContext):
-    message = call.data[1:]
-    chat_id = call.message.chat.id
-    counter = supabase.table('Pointer').select('counter').eq('chat_id', chat_id).execute().data[0]['counter']
-    counter = 0
-    answer = bool(supabase.table('AdminAnswerOptions').select('correct').eq('counter', counter).execute().data[int(message)]['correct'])
-    if answer == True:
-        await bot.send_message(chat_id, "Ответ верный")
-    else:
-        await bot.send_message(chat_id, "Вы ошиблись!")
-    await MenuStates.waiting_for_profile.set()
-    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
 
 #------------------------------------------------------------------------------------------------------------------------
 #Система отлова людей без state и обработчик стикеров

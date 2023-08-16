@@ -179,3 +179,12 @@ helpinlinereg = InlineKeyboardMarkup(row_width=1)
 helpinlinenaming = InlineKeyboardButton(text="Помощь", web_app = WebAppInfo(url = 'https://github.com/Student-Labs-2023/BoilerPoint/blob/main/Documentation/README.md'))
 helpinlinereg.add(helpinlinenaming)
 
+#admin tasks
+admtasks = ReplyKeyboardMarkup(resize_keyboard=True)
+admcreatetask = KeyboardButton(text="Создать коллекцию")
+admtasklist = KeyboardButton(text="Список коллекций")
+admdeletetask = KeyboardButton(text="Удалить коллекцию")
+admtaskback = KeyboardButton(text="⬅️Назад в меню")
+admtasks.row(admcreatetask)
+admtasks.row(admdeletetask,admtasklist)
+admtasks.row(admtaskback)
