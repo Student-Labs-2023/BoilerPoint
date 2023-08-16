@@ -1466,7 +1466,7 @@ async def handle_The_Last_Frontier(message: types.Message, state: FSMContext):
 #Система для Telegram Web App
 #-----------------------------------------------------------------------------------------------------------------------
 
-@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state='*')
+@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=[MenuStates.promocode,MenuStates.promocodestart])
 async def handle_qr(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
     message.text = message.web_app_data.data
     await asyncio.wait_for(check_promocode(message,state),timeout=3.5)
