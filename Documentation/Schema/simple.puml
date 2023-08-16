@@ -1,0 +1,18 @@
+@startuml 
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "User", "Boiling point visitor")
+Person(admin, "Administrator", "Boiling point admin")
+
+System(bpb, "Boiling Point Bot", "Provide boiling point gamification functionality")
+System_Ext(leaderid, "Leader ID", "Provide info about events, users, etc.")
+System_Ext(telegram, "Telegram", "Telegram Domain")
+
+Rel(user, telegram, "Using to participate in events, saw profile, users top and work with promos", "Telegram/Web App")
+Rel(admin, telegram, "Using to CRUD users, events, etc.", "Telegram/Web App")
+Rel(telegram, bpb, "Using to pass requests to bot", "HTTPS/Webhook")
+Rel(bpb, leaderid, "Using to synchronize info about events", "sync,HTTPS/Rest")
+
+@enduml
