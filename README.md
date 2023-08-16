@@ -35,6 +35,11 @@ pip install requirements.txt
   
 - Получите у меня в телеграме (t.me/whitehodok) наш credentials.json
 
+# Схема проекта на текущий момент
+
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/0a395e2d-d5e6-4de8-bc96-d610544a4c27)
+
+
 # Схема базы данных на текущий момент
 
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/b7ff7544-e954-485a-a8ff-66ba87e5ffee)
