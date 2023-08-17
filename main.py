@@ -775,6 +775,15 @@ async def admin_task_maker(message: types.Message, state: FSMContext):
     user.user_state = str(AdminPanel.taskmenu)
     users.set(user)
 
+@dp.message_handler(text='Удалить коллекцию', state=AdminPanel.taskmenu)
+async def del_coll(message: types.Message, state: FSMContext):
+    await message.reply("Функции ещё нет, так как веб-приложение для опросов находится в разработке")
+
+@dp.message_handler(text='Список коллекций', state=AdminPanel.taskmenu)
+async def del_coll(message: types.Message, state: FSMContext):
+    await message.reply("Функции ещё нет, так как веб-приложение для опросов находится в разработке")
+
+
 @dp.message_handler(text="Создать коллекцию", state=AdminPanel.taskmenu)
 async def admin_make(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
@@ -1433,7 +1442,7 @@ async def handle_tasks(message: types.Message, state: FSMContext, counter):
     chat_id = message.chat.id
     await state.update_data(counter = counter)
     task = supabase.table('TaskCollection').select('name','description','photo').execute().data[int(counter)]
-    text = f"{counter}.{task['name']}\n{task['description']}"
+    text = f"{task['name']}\n{task['description']}"
     await bot.send_photo(chat_id, task['photo'] , text, reply_markup= ikbmtasks)
 
 @dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile) #кнопка вправо 1 рубеж
@@ -1474,6 +1483,7 @@ async def go(call: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
     await MenuStates.waiting_for_profile.set()
+
 
 #------------------------------------------------------------------------------------------------------------------------
 #Система отлова людей без state и обработчик стикеров
