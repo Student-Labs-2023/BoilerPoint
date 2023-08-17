@@ -1,0 +1,7 @@
+/* app global css */
+.survey-card {
+  margin-top: 20px;
+  padding: 50px;
+  width: 100%;
+  max-width: 750px;
+}
