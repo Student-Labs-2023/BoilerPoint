@@ -28,6 +28,7 @@ from supabase import Client, create_client
 #from Database.DataUsers import *
 from codegen import *
 from funcs import show_rating, show_user_rating, is_dirt
+from aiogram.types.web_app_info import WebAppInfo
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -799,27 +800,23 @@ async def admin_taskmenu_descriptionwait(message: types.Message, state: FSMConte
 @dp.message_handler(content_types= types.ContentType.PHOTO, state = AdminPanel.taskmenu_photowait)
 async def admin_taskmenu_photowait(message: types.Message , state: FSMContext):
     chat_id = message.chat.id
-    data = await state.get_data()
     photo = message
+    await bot.send_message(chat_id,"Введите количество вопросов в коллекции:")
+    await state.update_data(photo = photo.photo[2].file_id)
+    await AdminPanel.taskmenu_collection_counterwait.set()
+
+@dp.message_handler(state=AdminPanel.taskmenu_collection_counterwait)
+async def admin_taskmenu_collection_counterwait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    counter = int(message.text) # Тут надо подключить валидацию на интовое значение!!!
+    data = await state.get_data()
     name = data.get("name")
     description = data.get("description")
-    supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo.photo[2].file_id}).execute()
+    photo = data.get("photo")
+    supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter}).execute()
     await state.finish()
-    await AdminPanel.taskmenu.set()
-    await bot.send_message(chat_id, "Коллекция создана успешно!", reply_markup=admtasks)
-
-#@dp.message_handler(state=AdminPanel.taskmenu_collection_counterwait)
-#async def admin_taskmenu_collection_counterwait(message: types.Message, state: FSMContext):
-    #chat_id = message.chat.id
-    #counter = int(message.text) # Тут надо подключить валидацию на интовое значение!!!
-    #data = await state.get_data()
-    #name = data.get("name")
-    #description = data.get("description")
-    #photo = data.get("photo")
-    #supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo}).execute()
-    #await state.finish()
-    #await AdminPanel.admin_menu.set()
-    #await bot.send_message(chat_id,"Коллекция создана успешно!",reply_markup=admrkbm)
+    await AdminPanel.admin_menu.set()
+    await bot.send_message(chat_id,"Коллекция создана успешно!",reply_markup=admrkbm)
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
@@ -1466,13 +1463,16 @@ async def go(call: types.CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
     data = await state.get_data()
     counter = data.get('counter')
-    #question_list = supabase.table('AdminQuestion').select('question' ).eq('counter', counter).order('number', desc = False).execute().data
-    #ikq = InlineKeyboardMarkup(row_width=1)
-    #for keynomber in range(len(question_list)):
-        #Rkey = InlineKeyboardButton(text=str(question_list[keynomber]["question"]), callback_data=keynomber)
-        #ikq.row(Rkey)
+    task_list = supabase.table('TaskCollection').select('name').execute().data
+    question_list = supabase.table('TaskCollectionQuestion').select('question0','question1','question2','question3','question4','question5','question6','question7' ).eq('name', task_list[counter]['name']).execute().data
+    ikq = InlineKeyboardMarkup(row_width=1)
+    for keynomber in range(8):
+        if question_list[0][f'question{keynomber}'] != None:
+            print(f"'{question_list[0][f'question{keynomber}']}'")
+            Rkey = InlineKeyboardButton(text= f'Вопрос {keynomber + 1}', web_app = WebAppInfo(url = f"{question_list[0][f'question{keynomber}']}"))
+            ikq.row(Rkey)
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    #await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
+    await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
     await MenuStates.waiting_for_profile.set()
 
 #------------------------------------------------------------------------------------------------------------------------
