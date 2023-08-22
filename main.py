@@ -781,7 +781,27 @@ async def admin_task_maker(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text='Удалить коллекцию', state=AdminPanel.taskmenu)
 async def del_coll(message: types.Message, state: FSMContext):
-    await message.reply("Функции ещё нет, так как веб-приложение для опросов находится в разработке")
+    await message.reply("Введите пожалуйста имя коллекции для её удаления", reply_markup=types.ReplyKeyboardRemove())
+    await AdminPanel.taskmenu_collection_delete_select.set()
+
+@dp.message_handler(state=AdminPanel.taskmenu_collection_delete_select)
+async def delete_survey_handler(message: types.Message, state: FSMContext):
+    codee = message.text
+    deleted = supabase.table('TaskCollection').delete().match({'name': codee}).execute()
+
+    if not deleted.data:
+        # ничего не удалено
+        await message.reply("Такой коллекции нет", reply_markup=admtasks)
+        await state.finish()
+        await AdminPanel.taskmenu.set()
+        return
+
+    # удаление прошло успешно
+    codee_code = code(codee)
+    await message.reply(f"Промокод {codee_code} удален", reply_markup=admtasks, parse_mode='MarkdownV2')
+    await AdminPanel.taskmenu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.taskmenu)
 
 @dp.message_handler(text='Список коллекций', state=AdminPanel.taskmenu)
 async def del_coll(message: types.Message, state: FSMContext):
@@ -802,7 +822,6 @@ async def del_coll(message: types.Message, state: FSMContext):
         url_parsed = f'<a href="{url}">Ссылка</a>'
         promo_text += (name_parsed + f" {url_parsed} ")
 
-    print(promo_text)
     await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks)
     await state.finish()
     await AdminPanel.taskmenu.set()
