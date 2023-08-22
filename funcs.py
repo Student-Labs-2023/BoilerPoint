@@ -4,6 +4,8 @@ from buttons import *
 from dotenv import load_dotenv
 import re
 from functools import lru_cache
+import string
+import random
 
 load_dotenv()
 
@@ -39,6 +41,15 @@ async def show_user_rating(chat_id: int):
 
     # Отправляем сообщение
     await bot.send_message(chat_id, rating_text, reply_markup=ikbmrating)
+
+# generate id for survey
+async def generate_id_for_survey(length):
+    characters = string.ascii_letters + string.digits
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
+
+
+
 
 # Validation BAD words
 
