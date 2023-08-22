@@ -27,9 +27,9 @@ from GoogleSheets.Google_sheets import rating_update_start_thread
 from supabase import Client, create_client
 #from Database.DataUsers import *
 from codegen import *
-from funcs import show_rating, show_user_rating, is_dirt
+from funcs import show_rating, show_user_rating, is_dirt, generate_id_for_survey
 from aiogram.types.web_app_info import WebAppInfo
-
+import ast
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 # Инициализация бота, диспетчера и хранилищаа состояний
@@ -135,6 +135,7 @@ class AdminPanel(StatesGroup):
     taskmenu_descriptionwait = State()
     taskmenu_photowait = State()
     taskmenu_collection_counterwait = State()
+    taskmenu_collection_surveywebapp = State()
 
 class EventMakerPanel(StatesGroup):
     menu = State()
@@ -810,22 +811,54 @@ async def admin_taskmenu_descriptionwait(message: types.Message, state: FSMConte
 async def admin_taskmenu_photowait(message: types.Message , state: FSMContext):
     chat_id = message.chat.id
     photo = message
-    await bot.send_message(chat_id,"Введите количество вопросов в коллекции:")
-    await state.update_data(photo = photo.photo[2].file_id)
-    await AdminPanel.taskmenu_collection_counterwait.set()
+    try:
+        await state.update_data(photo = photo.photo[2].file_id)
+        await bot.send_message(chat_id,"Введите количество вопросов в коллекции:")
+        await AdminPanel.taskmenu_collection_counterwait.set()
+    except Exception as e:
+        await bot.send_message(chat_id,"Произошла ошибка, отправьте пожалуйста фотографию в хорошем качестве.")
+        await AdminPanel.taskmenu_photowait.set()
+    
 
 @dp.message_handler(state=AdminPanel.taskmenu_collection_counterwait)
 async def admin_taskmenu_collection_counterwait(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
-    counter = int(message.text) # Тут надо подключить валидацию на интовое значение!!!
+    try: 
+        counter = int(message.text)
+    except ValueError:
+        await bot.send_message(chat_id,"Введенное значение должно быть числом > 0")
+        await AdminPanel.taskmenu_collection_counterwait.set()
+    if counter <= 0:
+        await bot.send_message(chat_id,"Введенное значение должно быть числом > 0")
+        await AdminPanel.taskmenu_collection_counterwait.set()
+    else:
+        await state.update_data(counter = counter)       
+        data = await state.get_data()
+        name = data.get("name")
+        description = data.get("description")
+        photo = data.get("photo")
+        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter}).execute()
+        await bot.send_message(chat_id,"Коллекция создана успешно! Перейдите пожалуйста, к составлению заданий!⬇️",reply_markup=surveywebapp)
+        await AdminPanel.taskmenu_collection_surveywebapp.set()
+
+@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=AdminPanel.taskmenu_collection_surveywebapp)
+async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
     data = await state.get_data()
-    name = data.get("name")
-    description = data.get("description")
-    photo = data.get("photo")
-    supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter}).execute()
-    await state.finish()
+    counter = data.get("counter") 
+    querylist = []
+    url = 'https://survey-web-app.pages.dev/view?json='
+    message.text = message.web_app_data.data
+    data  = json.loads(message.text)
+    data['questionId'] = await generate_id_for_survey(5)
+    new_json_data = json.dumps(data)
+    new_json_data = ast.literal_eval(new_json_data)
+    querylist.append(new_json_data)
+    querytuple = {"surveyData":querylist}
+    querytuple_dump:str = json.dumps(querytuple)
+    url = url + querytuple_dump # запрос в бд надо
+    await bot.send_message(message.chat.id,text=url)
+    await message.reply("Создание вопросов успешно завершено!", reply_markup=admrkbm)
     await AdminPanel.admin_menu.set()
-    await bot.send_message(chat_id,"Коллекция создана успешно!",reply_markup=admrkbm)
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
