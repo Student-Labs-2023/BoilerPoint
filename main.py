@@ -832,33 +832,44 @@ async def admin_taskmenu_collection_counterwait(message: types.Message, state: F
         await bot.send_message(chat_id,"Введенное значение должно быть числом > 0")
         await AdminPanel.taskmenu_collection_counterwait.set()
     else:
-        await state.update_data(counter = counter)       
-        data = await state.get_data()
-        name = data.get("name")
-        description = data.get("description")
-        photo = data.get("photo")
-        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter}).execute()
+        await state.update_data(counter = counter)
         await bot.send_message(chat_id,"Коллекция создана успешно! Перейдите пожалуйста, к составлению заданий!⬇️",reply_markup=surveywebapp)
         await AdminPanel.taskmenu_collection_surveywebapp.set()
 
 @dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=AdminPanel.taskmenu_collection_surveywebapp)
 async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
+    chat_id = message.chat.id
     data = await state.get_data()
-    counter = data.get("counter") 
-    querylist = []
+    counter = data.get("counter")
+    querylist = data.get("querylist")
+    name = data.get('name')
+    if querylist == None:
+        querylist = []
     url = 'https://survey-web-app.pages.dev/view?json='
     message.text = message.web_app_data.data
     data  = json.loads(message.text)
-    data['questionId'] = await generate_id_for_survey(5)
+    data['questionId'] = await generate_id_for_survey(10)
     new_json_data = json.dumps(data)
     new_json_data = ast.literal_eval(new_json_data)
     querylist.append(new_json_data)
-    querytuple = {"surveyData":querylist}
-    querytuple_dump:str = json.dumps(querytuple)
-    url = url + querytuple_dump # запрос в бд надо
-    await bot.send_message(message.chat.id,text=url)
-    await message.reply("Создание вопросов успешно завершено!", reply_markup=admrkbm)
-    await AdminPanel.admin_menu.set()
+    await state.update_data(querylist = querylist)
+    if counter > 1:
+        await bot.send_message(chat_id, "Заполнить вопрос",reply_markup=surveywebapp)
+        await AdminPanel.taskmenu_collection_surveywebapp.set()
+        counter -= 1
+        await state.update_data(counter = counter)
+    else:
+        await AdminPanel.taskmenu.set()
+        await bot.send_message(chat_id, "Опрос успешно создан!", reply_markup=admtasks)
+        querytuple = {"surveyData":querylist}
+        querytuple_dump: str = json.dumps(querytuple)
+        url = url + querytuple_dump # запрос в бд надо
+        url = url.replace(' ','%20')
+        url = url.replace('"', '%22')
+        name = data.get("name")
+        description = data.get("description")
+        photo = data.get("photo")
+        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url}).execute()
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
@@ -1474,8 +1485,14 @@ async def handle_tickets_back(message: types.Message, state: FSMContext):
 async def handle_tasks(message: types.Message, state: FSMContext, counter):
     chat_id = message.chat.id
     await state.update_data(counter = counter)
-    task = supabase.table('TaskCollection').select('name','description','photo').execute().data[int(counter)]
+    task = supabase.table('TaskCollection').select('name','description','photo','url').execute().data[int(counter)]
     text = f"{task['name']}\n{task['description']}"
+    ikbmtasks = InlineKeyboardMarkup(resize_keyboard=True)
+    ibleft = InlineKeyboardButton(text="⬅️", callback_data="left")
+    ibright = InlineKeyboardButton(text="➡️", callback_data="right")
+    print(f"{task['url']}")
+    ibgo = InlineKeyboardButton(text="✅", web_app = WebAppInfo(url = f'{task["url"]}'))
+    ikbmtasks.row(ibleft, ibgo, ibright)
     await bot.send_photo(chat_id, task['photo'] , text, reply_markup= ikbmtasks)
 
 @dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile) #кнопка вправо 1 рубеж
@@ -1500,23 +1517,11 @@ async def left(call: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     await handle_tasks(call.message, state, counter)
 
-@dp.callback_query_handler(text="go", state=MenuStates.waiting_for_profile) #Человек выбрал задание и перешел в выбор вопроса # переход ко 2 рубежу # отображение 2 рубежа вариантов вопросов внутри коллекции заданий
-async def go(call: types.CallbackQuery, state: FSMContext):
-    chat_id = call.message.chat.id
-    data = await state.get_data()
-    counter = data.get('counter')
-    task_list = supabase.table('TaskCollection').select('name').execute().data
-    question_list = supabase.table('TaskCollectionQuestion').select('question0','question1','question2','question3','question4','question5','question6','question7' ).eq('name', task_list[counter]['name']).execute().data
-    ikq = InlineKeyboardMarkup(row_width=1)
-    for keynomber in range(8):
-        if question_list[0][f'question{keynomber}'] != None:
-            print(f"'{question_list[0][f'question{keynomber}']}'")
-            Rkey = InlineKeyboardButton(text= f'Вопрос {keynomber + 1}', web_app = WebAppInfo(url = f"{question_list[0][f'question{keynomber}']}"))
-            ikq.row(Rkey)
-    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await bot.send_message(chat_id, "Список заданий:", reply_markup=ikq)
-    await MenuStates.waiting_for_profile.set()
-
+@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=MenuStates.waiting_for_profile)
+async def survey_wait(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
+    message.text = message.web_app_data.data
+    data = json.loads(message.text)
+    print(data)
 
 #------------------------------------------------------------------------------------------------------------------------
 #Система отлова людей без state и обработчик стикеров
