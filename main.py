@@ -136,6 +136,9 @@ class AdminPanel(StatesGroup):
     taskmenu_photowait = State()
     taskmenu_collection_counterwait = State()
     taskmenu_collection_surveywebapp = State()
+    taskmenu_collection_list = State()
+    taskmenu_collection_delete_select = State()
+    taskmenu_collection_delete_confirm = State()
 
 class EventMakerPanel(StatesGroup):
     menu = State()
@@ -782,7 +785,28 @@ async def del_coll(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text='Список коллекций', state=AdminPanel.taskmenu)
 async def del_coll(message: types.Message, state: FSMContext):
-    await message.reply("Функции ещё нет, так как веб-приложение для опросов находится в разработке")
+    await AdminPanel.taskmenu_collection_list.set()
+    chat_id = message.chat.id
+    user = users.get(message.chat.id)
+    user.user_state = str(AdminPanel.taskmenu_collection_list)
+
+    promos = supabase.table('TaskCollection').select('name', 'url').filter('name', 'gt', 0).order('name',desc=True).execute()
+
+    promo_text = "📝 Действующие формы опросов:\n\n"
+
+    for promo in promos.data:
+        name = promo['name']
+        url = promo['url']
+
+        name_parsed = f'<code>{name}</code>'
+        url_parsed = f'<a href="{url}">Ссылка</a>'
+        promo_text += (name_parsed + f" {url_parsed} ")
+
+    print(promo_text)
+    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks)
+    await state.finish()
+    await AdminPanel.taskmenu.set()
+    user.user_state = str(AdminPanel.taskmenu)
 
 
 @dp.message_handler(text="Создать коллекцию", state=AdminPanel.taskmenu)
