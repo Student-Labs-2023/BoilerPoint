@@ -1033,9 +1033,17 @@ async def admin_make(message: types.Message, state: FSMContext):
 async def admin_taskmenu_namewait(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
     name = message.text
-    await bot.send_message(chat_id, "Введите описание коллекции заданий:")
-    await state.update_data(name=name)
-    await AdminPanel.taskmenu_descriptionwait.set()
+    tasks_name = []
+    response = supabase.table('TaskCollection').select('*').execute()
+    for name_table in response.data:
+        tasks_name.append(name_table['name'])
+    if name in tasks_name:
+        await bot.send_message(chat_id,"Введенное имя уже существует, введите другое", reply_markup=types.ReplyKeyboardRemove())
+        await AdminPanel.AdminPanel.taskmenu.set()
+    else:
+        await bot.send_message(chat_id, "Введите описание коллекции заданий:")
+        await state.update_data(name=name)
+        await AdminPanel.taskmenu_descriptionwait.set()
 
 @dp.message_handler(state=AdminPanel.taskmenu_descriptionwait)
 async def admin_taskmenu_descriptionwait(message: types.Message, state: FSMContext):
