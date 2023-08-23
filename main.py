@@ -812,16 +812,17 @@ async def del_coll(message: types.Message, state: FSMContext):
 
     promos = supabase.table('TaskCollection').select('name', 'url').filter('name', 'gt', 0).order('name',desc=True).execute()
 
-    promo_text = "📝 Действующие формы опросов: \n\n"
+    promo_text = "📝 Действующие формы опросов:\n\n"
+
     for promo in promos.data:
         name = promo['name']
         url = promo['url']
 
         name_parsed = f'<code>{name}</code>'
         url_parsed = f'<a href="{url}">Ссылка</a>'
-        promo_text += (name_parsed + f" {url_parsed} \n")
+        promo_text += (name_parsed + f" {url_parsed} ")
 
-    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks, disable_web_page_preview=True)
+    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks)
     await state.finish()
     await AdminPanel.taskmenu.set()
     user.user_state = str(AdminPanel.taskmenu)
@@ -884,41 +885,34 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMCon
     data = await state.get_data()
     counter = data.get("counter")
     querylist = data.get("querylist")
-    answers = data.get("answers")
+    name = data.get('name')
     if querylist == None:
         querylist = []
-    if answers == None:
-        answers:dict = {}
     url = 'https://survey-web-app.pages.dev/view?json='
     message.text = message.web_app_data.data
     data  = json.loads(message.text)
     data['questionId'] = await generate_id_for_survey(10)
     new_json_data = json.dumps(data)
     new_json_data = ast.literal_eval(new_json_data)
-    data = await state.get_data()
-    name = data.get("name")
-    answers.update({new_json_data["questionId"]:new_json_data["correctAnswer"]}) # questionId:correctAnswer
-    await state.update_data(answers = answers)
     querylist.append(new_json_data)
     await state.update_data(querylist = querylist)
     if counter > 1:
-        await bot.send_message(chat_id, "Пожалуйста, заполните следующий вопрос",reply_markup=surveywebapp)
+        await bot.send_message(chat_id, "Заполнить вопрос",reply_markup=surveywebapp)
         await AdminPanel.taskmenu_collection_surveywebapp.set()
         counter -= 1
         await state.update_data(counter = counter)
     else:
         await AdminPanel.taskmenu.set()
         await bot.send_message(chat_id, "Опрос успешно создан!", reply_markup=admtasks)
-        querydict = {"surveyData":querylist}
-        querydict_dump: str = json.dumps(querydict)
-        url = url + querydict_dump # запрос в бд надо
+        querytuple = {"surveyData":querylist}
+        querytuple_dump: str = json.dumps(querytuple)
+        url = url + querytuple_dump # запрос в бд надо
         url = url.replace(' ','%20')
         url = url.replace('"', '%22')
-        data = await state.get_data()
         name = data.get("name")
         description = data.get("description")
         photo = data.get("photo")
-        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,'answers':answers}).execute()
+        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url}).execute()
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
@@ -1063,8 +1057,10 @@ async def handle_waiting_for_profile(message: types.Message, state: FSMContext):
         await MenuStates.calendar.set()
         await handle_calendar(message, state)
     elif select == "📝Задания":
-        await MenuStates.waiting_for_profile.set()
-        await handle_tasks(message, state, 0)
+        await MenuStates.tasks.set()
+        counter = 0
+        await state.update_data(counter=counter)
+        await handle_tasks(message, state)
     elif select == "🗝️Промокоды":
         await MenuStates.promocode.set()
         await bot.send_message(chat_id, "Вы попали в меню работы с промокодами", reply_markup=promo_kb)
@@ -1530,59 +1526,65 @@ async def handle_tickets_back(message: types.Message, state: FSMContext):
 #Система заданий
 #-----------------------------------------------------------------------------------------------------------------------
 
-@dp.message_handler(state=MenuStates.waiting_for_profile) #Вывод коллекции заданий (1 рубеж) AdminTasks
-async def handle_tasks(message: types.Message, state: FSMContext, counter):
+@dp.message_handler(text = "📝Задания", state=MenuStates.tasks)
+async def handle_tasks(message: types.Message, state: FSMContext):
     chat_id = message.chat.id
+    data = await state.get_data()
+    counter = data.get('counter')
     await state.update_data(counter = counter)
     task = supabase.table('TaskCollection').select('name','description','photo','url').execute().data[int(counter)]
-    await state.update_data(name = task['name'])
     text = f"{task['name']}\n{task['description']}"
-    ikbmtasks = InlineKeyboardMarkup(resize_keyboard=True)
-    ibleft = InlineKeyboardButton(text="⬅️", callback_data="left")
-    ibright = InlineKeyboardButton(text="➡️", callback_data="right")
+    ikbmtasks = ReplyKeyboardMarkup(resize_keyboard=True)
+    ibleft = KeyboardButton(text="⬅️")
+    ibright = KeyboardButton(text="➡️")
+    ibback = KeyboardButton(text="⬅️Меню")
     print(f"{task['url']}")
-    ibgo = InlineKeyboardButton(text="✅", web_app = WebAppInfo(url = f'{task["url"]}'))
+    ibgo = KeyboardButton(text="✅", web_app = WebAppInfo(url = f'{task["url"]}'))
     ikbmtasks.row(ibleft, ibgo, ibright)
-    await bot.send_photo(chat_id, task['photo'] , text, reply_markup= ikbmtasks)
+    ikbmtasks.row(ibback)
+    message_id_data = await bot.send_photo(chat_id, task['photo'] , text, reply_markup= ikbmtasks)
+    message_id_data = message_id_data['message_id']
+    await state.update_data(message_id_data=message_id_data)
 
-@dp.callback_query_handler(text="right", state=MenuStates.waiting_for_profile) #кнопка вправо 1 рубеж
-async def right(call: types.CallbackQuery, state: FSMContext):
-    chat_id = call.message.chat.id
+@dp.message_handler(text="➡️", state=MenuStates.tasks)
+async def right(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
     data = await state.get_data()
     counter = data.get('counter')+1
     if counter>len(supabase.table('TaskCollection').select('name' ).execute().data)-1:
         counter = 0
     await state.update_data(counter = counter)
-    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await handle_tasks(call.message, state, counter)
+    await handle_tasks(message, state)
+    await bot.delete_message(chat_id=chat_id, message_id=data.get('message_id_data'))
+    await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
 
-@dp.callback_query_handler(text="left", state=MenuStates.waiting_for_profile) # кнопка влево 1 рубеж
-async def left(call: types.CallbackQuery, state: FSMContext):
-    chat_id = call.message.chat.id
+@dp.message_handler(text="⬅️", state=MenuStates.tasks)
+async def left(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
     data = await state.get_data()
     counter = data.get('counter') - 1
     if counter < 0:
         counter = len(supabase.table('TaskCollection').select('name').execute().data) - 1
     await state.update_data(counter=counter)
-    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
-    await handle_tasks(call.message, state, counter)
+    await handle_tasks(message, state)
+    await bot.delete_message(chat_id=chat_id, message_id=data.get('message_id_data'))
+    await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
 
-@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=MenuStates.waiting_for_profile)
+@dp.message_handler(text="⬅️Меню", state=MenuStates.tasks)
+async def task_back(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    data = await state.get_data()
+    await bot.delete_message(chat_id=chat_id, message_id=data.get('message_id_data'))
+    await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
+    await MenuStates.waiting_for_profile.set()
+    await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
+
+
+@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=MenuStates.tasks)
 async def survey_wait(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
     message.text = message.web_app_data.data
     data = json.loads(message.text)
     print(data)
-
-    #message.text = await message.web_app_data.data
-    #print(message.text)
-    #data = await state.get_data()
-    #name = data.get('name')
-    #task = supabase.table('TaskCollection').select('name','answers').execute().data
-    #data_from_web_app = json.loads(message.text)
-    #right_answers = list(task['answers'].values())
-    #user_answers = list(data_from_web_app.values())
-    #await bot.send_message(message.chat.id, text=user_answers)
-    #await bot.send_message(message.chat.id, text=right_answers)
 
 #------------------------------------------------------------------------------------------------------------------------
 #Система отлова людей без state и обработчик стикеров
