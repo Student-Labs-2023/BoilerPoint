@@ -339,6 +339,8 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA, state: FSMCont
         supabase.table('TaskCollection').insert(
             {'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,
              'numberPoints': numberPoints, 'rightAnswers': rightAnswers}).execute()
+        await state.finish()
+        await EventMakerPanel.taskmenu.set()
 
 @dp.message_handler(text='⬅️Назад в меню', state=EventMakerPanel.taskmenu)
 async def back_to_event_main_menu(message: types.Message, state: FSMContext):
@@ -1128,6 +1130,8 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMCon
         description = data.get("description")
         photo = data.get("photo")
         supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,'numberPoints':numberPoints, 'rightAnswers':rightAnswers}).execute()
+        await state.finish()
+        await AdminPanel.taskmenu.set()
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
