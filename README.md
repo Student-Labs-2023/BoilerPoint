@@ -45,7 +45,8 @@ pip install requirements.txt
 
 # Схема базы данных на текущий момент
 
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/b7ff7544-e954-485a-a8ff-66ba87e5ffee)
+![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/e40a735a-3d66-45ee-adcc-634cb45e7b86)
+
 
 
 # Documentation 
