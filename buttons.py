@@ -64,6 +64,16 @@ usermakerkbm.row(usmkbm_task)
 usermakerkbm.row(usmkbm_menu)
 
 
+#usermaker add task menu buttons
+eventtasks = ReplyKeyboardMarkup(resize_keyboard=True)
+admcreatetask = KeyboardButton(text="Создать коллекцию")
+admtasklist = KeyboardButton(text="Список коллекций")
+admdeletetask = KeyboardButton(text="Удалить коллекцию")
+admtaskback = KeyboardButton(text="⬅️Назад в меню")
+eventtasks.row(admcreatetask)
+eventtasks.row(admdeletetask,admtasklist)
+eventtasks.row(admtaskback)
+
 #admin buttons
 admrkbm = ReplyKeyboardMarkup(resize_keyboard=True)
 admk_user_editor = KeyboardButton(text="⚙️Изменить пользователя")
