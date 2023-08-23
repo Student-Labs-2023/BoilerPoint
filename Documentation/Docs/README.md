@@ -14,7 +14,7 @@
 
 3. https://github.com/Goldenbarnowl
 
-4. https://github.com/dudava
+4. https://github.com/dudava (Web-App)
 
 
 # За что отвечает каждый импорт 
