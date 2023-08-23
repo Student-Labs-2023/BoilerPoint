@@ -35,6 +35,17 @@ pip install requirements.txt
   
 - Получите у меня в телеграме (t.me/whitehodok) наш credentials.json
 
+# Для проверяющих 
+
+- Напишите мне в телеграм https://t.me/whitehodok с просьбой скинуть последний билд бота
+
+- Установите все необходимые зависимости через консоль, прописав следующее 
+
+``` 
+pip install -r requirements.txt
+```
+- Запустите main.py любым удобным для вас способом
+
 # Схема проекта на текущий момент
 
 ![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/ee14121c-6085-4e2c-9e8a-1cc66eb3a20b)
