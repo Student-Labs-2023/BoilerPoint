@@ -820,9 +820,9 @@ async def del_coll(message: types.Message, state: FSMContext):
 
         name_parsed = f'<code>{name}</code>'
         url_parsed = f'<a href="{url}">Ссылка</a>'
-        promo_text += (name_parsed + f" {url_parsed} ")
+        promo_text += (name_parsed + f" {url_parsed} \n")
 
-    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks)
+    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks, disable_web_page_preview=True)
     await state.finish()
     await AdminPanel.taskmenu.set()
     user.user_state = str(AdminPanel.taskmenu)
@@ -886,10 +886,13 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMCon
     counter = data.get("counter")
     querylist = data.get("querylist")
     numberPoints = data.get("numberPoints")
+    rightAnswers = data.get("rightAnswers")
     if querylist == None:
         querylist = []
     if numberPoints == None:
         numberPoints:dict = {}
+    if rightAnswers == None:
+        rightAnswers:dict = {}
     url = 'https://survey-web-app.pages.dev/view?json='
     message.text = message.web_app_data.data
     data  = json.loads(message.text)
@@ -897,9 +900,11 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMCon
     new_json_data = json.dumps(data)
     new_json_data = ast.literal_eval(new_json_data)
     data = await state.get_data()
-    name = data.get("name")
-    numberPoints.update({new_json_data["numberPoints"]:new_json_data["correctAnswer"]}) # numberPoints:correctAnswer
+    name = data.get("name")                         
+    numberPoints.update({new_json_data["questionId"]:new_json_data["numberPoints"]}) # numberPoints:correctAnswer
+    rightAnswers.update({new_json_data['questionId']:new_json_data['correctAnswer']})
     await state.update_data(numberPoints = numberPoints)
+    await state.update_data(rightAnswers = rightAnswers)
     querylist.append(new_json_data)
     await state.update_data(querylist = querylist)
     if counter > 1:
@@ -919,7 +924,7 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMCon
         name = data.get("name")
         description = data.get("description")
         photo = data.get("photo")
-        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,'numberPoints':numberPoints}).execute()
+        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,'numberPoints':numberPoints, 'rightAnswers':rightAnswers}).execute()
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
@@ -1588,17 +1593,76 @@ async def task_back(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id, "Вы вернулись в меню!", reply_markup=rkbm)
 
 
+
+
+
 @dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=MenuStates.tasks)
-async def survey_wait(message: types.ContentType.WEB_APP_DATA , state: FSMContext):
+async def handle_test_results(message: types.ContentType.WEB_APP_DATA, state: FSMContext):
     message.text = message.web_app_data.data
+    chat_id = message.chat.id
     user_answers = json.loads(message.text)
+
     data = await state.get_data()
-    counter = data.get('counter') 
-    task = supabase.table('TaskCollection').select('numberPoints').execute().data[int(counter)]
-    right_answers = list(task.values())
-    user_answers = list(user_answers.values())
-    await bot.send_message(message.chat.id, text=user_answers)
-    await bot.send_message(message.chat.id, text=right_answers[0])
+    counter = data.get('counter')
+    name = data.get('name')
+    task = supabase.table('TaskCollection').select('numberPoints', 'rightAnswers').execute().data[int(counter)]
+
+    # Преобразуем в словарь
+    right_answers = json.loads(task['rightAnswers'])
+    points = json.loads(task['numberPoints'])
+
+
+    user_answers_dict = {}
+
+    for question_id in user_answers:
+        user_answers_dict[question_id] = user_answers[question_id]
+
+    num_correct = 0
+    score = 0
+
+    user = users.get(chat_id)
+    user_balance = user.balance
+
+    for question_id in user_answers_dict:
+        if user_answers_dict[question_id] == right_answers[question_id]:
+            num_correct += 1
+            score += int(points[question_id])
+
+    used_survey_data = supabase.table('Passd').select('chat_id').eq('name', name).eq('chat_id', chat_id).execute()
+
+    if used_survey_data.data:
+
+        await bot.send_message(
+            message.chat.id,
+            text=f"Вы уже проходили этот опрос."
+        )
+        return
+
+    ident = generate_code()
+    supabase.table('Passd').insert({'chat_id':chat_id, 'name':name, 'id': ident}).execute()
+    new_balance = user_balance + score
+    user.balance = new_balance
+    users.set(user)
+    await bot.send_message(
+        message.chat.id,
+        text=f"Правильных ответов: {num_correct}\nБаллов: {score}"
+    )
+
+
+
+# код подсчета результатов
+
+
+def calculate_score(user_answers, right_answers, points):
+    score = 0
+    num_correct = 0
+
+    for question_id in user_answers:
+        if user_answers[question_id] == right_answers[question_id]:
+            score += int(points[question_id])
+            num_correct += 1
+
+    return num_correct, score
 
 
 #------------------------------------------------------------------------------------------------------------------------
