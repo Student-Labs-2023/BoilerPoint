@@ -812,17 +812,16 @@ async def del_coll(message: types.Message, state: FSMContext):
 
     promos = supabase.table('TaskCollection').select('name', 'url').filter('name', 'gt', 0).order('name',desc=True).execute()
 
-    promo_text = "📝 Действующие формы опросов:\n\n"
-
+    promo_text = "📝 Действующие формы опросов: \n\n"
     for promo in promos.data:
         name = promo['name']
         url = promo['url']
 
         name_parsed = f'<code>{name}</code>'
         url_parsed = f'<a href="{url}">Ссылка</a>'
-        promo_text += (name_parsed + f" {url_parsed} ")
+        promo_text += (name_parsed + f" {url_parsed} \n")
 
-    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks)
+    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=admtasks, disable_web_page_preview=True)
     await state.finish()
     await AdminPanel.taskmenu.set()
     user.user_state = str(AdminPanel.taskmenu)
@@ -885,34 +884,41 @@ async def survey_web_app(message: types.ContentType.WEB_APP_DATA , state: FSMCon
     data = await state.get_data()
     counter = data.get("counter")
     querylist = data.get("querylist")
-    name = data.get('name')
+    answers = data.get("answers")
     if querylist == None:
         querylist = []
+    if answers == None:
+        answers:dict = {}
     url = 'https://survey-web-app.pages.dev/view?json='
     message.text = message.web_app_data.data
     data  = json.loads(message.text)
     data['questionId'] = await generate_id_for_survey(10)
     new_json_data = json.dumps(data)
     new_json_data = ast.literal_eval(new_json_data)
+    data = await state.get_data()
+    name = data.get("name")
+    answers.update({new_json_data["questionId"]:new_json_data["correctAnswer"]}) # questionId:correctAnswer
+    await state.update_data(answers = answers)
     querylist.append(new_json_data)
     await state.update_data(querylist = querylist)
     if counter > 1:
-        await bot.send_message(chat_id, "Заполнить вопрос",reply_markup=surveywebapp)
+        await bot.send_message(chat_id, "Пожалуйста, заполните следующий вопрос",reply_markup=surveywebapp)
         await AdminPanel.taskmenu_collection_surveywebapp.set()
         counter -= 1
         await state.update_data(counter = counter)
     else:
         await AdminPanel.taskmenu.set()
         await bot.send_message(chat_id, "Опрос успешно создан!", reply_markup=admtasks)
-        querytuple = {"surveyData":querylist}
-        querytuple_dump: str = json.dumps(querytuple)
-        url = url + querytuple_dump # запрос в бд надо
+        querydict = {"surveyData":querylist}
+        querydict_dump: str = json.dumps(querydict)
+        url = url + querydict_dump # запрос в бд надо
         url = url.replace(' ','%20')
         url = url.replace('"', '%22')
+        data = await state.get_data()
         name = data.get("name")
         description = data.get("description")
         photo = data.get("photo")
-        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url}).execute()
+        supabase.table('TaskCollection').insert({'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,'answers':answers}).execute()
 
 @dp.message_handler(text="⬅️Назад в меню", state=AdminPanel.taskmenu)
 async def back_from_rules(message: types.Message, state: FSMContext):
@@ -1529,6 +1535,7 @@ async def handle_tasks(message: types.Message, state: FSMContext, counter):
     chat_id = message.chat.id
     await state.update_data(counter = counter)
     task = supabase.table('TaskCollection').select('name','description','photo','url').execute().data[int(counter)]
+    await state.update_data(name = task['name'])
     text = f"{task['name']}\n{task['description']}"
     ikbmtasks = InlineKeyboardMarkup(resize_keyboard=True)
     ibleft = InlineKeyboardButton(text="⬅️", callback_data="left")
@@ -1565,6 +1572,17 @@ async def survey_wait(message: types.ContentType.WEB_APP_DATA , state: FSMContex
     message.text = message.web_app_data.data
     data = json.loads(message.text)
     print(data)
+
+    #message.text = await message.web_app_data.data
+    #print(message.text)
+    #data = await state.get_data()
+    #name = data.get('name')
+    #task = supabase.table('TaskCollection').select('name','answers').execute().data
+    #data_from_web_app = json.loads(message.text)
+    #right_answers = list(task['answers'].values())
+    #user_answers = list(data_from_web_app.values())
+    #await bot.send_message(message.chat.id, text=user_answers)
+    #await bot.send_message(message.chat.id, text=right_answers)
 
 #------------------------------------------------------------------------------------------------------------------------
 #Система отлова людей без state и обработчик стикеров
