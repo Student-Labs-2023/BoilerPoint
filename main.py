@@ -1532,14 +1532,14 @@ async def del_profile(message: types.Message, state: FSMContext):
         user = users.get(chat_id)
         users.delete(user)
         supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
-        supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+        supabase.table('Passd').delete().eq('chat_id', chat_id).execute()
         await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
         await state.finish()
     elif tgname != None and select == "❗Я действительно хочу удалить свой профиль и понимаю, что все мои данные будут удалены в том числе и баланс.":
         tgname = "@" + tgname
         user = users.get(tgname)
         users.delete(user)
-        supabase.table('Pointer').delete().eq('chat_id', chat_id).execute()
+        supabase.table('Passd').delete().eq('chat_id', chat_id).execute()
         supabase.table('UsedPromocode').delete().eq('chat_id', chat_id).execute()
         supabase.table('Report').delete().eq('tgusr',tgname).execute()
         await bot.send_message(chat_id, "Ваш профиль был удален!", reply_markup=types.ReplyKeyboardRemove())
