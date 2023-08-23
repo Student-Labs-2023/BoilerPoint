@@ -1,11 +1,7 @@
 <template>
   <q-page class="bg-grey-3 column items-center">
     <SurveyEdit
-    :question="question"
-    :correctAnswer="correctAnswer"
-    :choices="choices"
-    :imageURL="imageURL"
-    :surveyId="surveyId"
+    :surveyData="surveyData"
     @saveSurveyChanges="(changes) => sendSurveyChanges(changes)"
     />
   </q-page>
@@ -15,7 +11,8 @@
 import SurveyEdit from 'src/components/SurveyEdit.vue'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { WebApp } from "@grammyjs/web-app";
+// import { WebApp } from "@grammyjs/web-app";
+import { Loading } from 'quasar';
 
 export default {
   name: 'EditPage',
@@ -24,35 +21,25 @@ export default {
   },
   setup() {
     const route = useRoute()
-    const imageURL = ref('')
-    const question = ref('')
-    const choices = ref([])
-    const correctAnswer = ref(null)
-    const surveyId = ref(null)
-    
-    const queryParams = route.query
-    imageURL.value = queryParams.imageURL
-    question.value = queryParams.question
-    if (queryParams.choices) {
-      choices.value = queryParams.choices.split('|')
-    }
-    correctAnswer.value = Number(queryParams.correctAnswer)
-    surveyId.value = Number(queryParams.surveyId)
+    const surveyData = ref(null)
+    surveyData.value = JSON.parse(route.query.json).surveyData
 
     // mount происходит вначале в child, а потом в parent
     onMounted(() => {
-      WebApp.ready();
+      // console.log(WebApp.version)
+      // WebApp.ready();
+      window.Telegram.WebApp.MainButton.show()
+      window.Telegram.WebApp.MainButton.text = "Сохранить вопрос"
+      // WebApp.expand()
     })
     return {
-      question,
-      choices,
-      correctAnswer,
-      imageURL,
-      surveyId,
+      surveyData,
 
       sendSurveyChanges(changes) {
-        console.log(changes)
-        window.Telegram.WebApp.sendData(JSON.stringify(changes))
+        // console.log(JSON.stringify(changes))
+        Loading.hide()
+        
+        
       }
     }
   }

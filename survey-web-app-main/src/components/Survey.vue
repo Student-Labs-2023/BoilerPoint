@@ -1,94 +1,113 @@
 <template>
-  <q-card class="survey-card" flat bordered>
-    <img :src="imageURL">
-    <q-card-section>
-      <div class="text-h6">{{ question }}</div>
-    </q-card-section>
-    <q-list>
-      <q-form @submit.prevent="onSubmit" class="q-gutter-md">
-        <div v-for="(choice, index) in choices">
-          <q-radio name="answer" v-model="answer" :val="index" :label="choice" />
-        </div>
-        <div>
-          <q-btn label="Ответить" type="submit" color="primary"/>
-        </div>
-      </q-form>
-    </q-list>
-    <q-card
-      v-if="submitResult.length > 0"
-      flat bordered
-      class="q-mt-md"
-      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'"
-    >
-      <q-card-section class="row q-gutter-sm items-center">
-        <div
-          v-for="(item, index) in submitResult"
-          :key="index"
-          class="q-px-sm q-py-xs bg-green-3 rounded-borders text-center text-no-wrap"
-        >Ответ принят</div>
+  <q-form>
+    <q-card class="survey-card" flat bordered v-for="question in surveyData">
+      <div class="column items-center">
+        <q-spinner
+          v-if="question.isLoading"
+          color="primary"
+          size="3em"
+          :thickness="10"
+        />
+      </div>
+      <img :src="question.imageUrl" :onload="() => { question.isLoading = false }" :class="{ unvisible: question.isLoading }">
+      <q-card-section>
+        <div class="text-h6">{{ question.question }}</div>
       </q-card-section>
+      <q-list>
+        <div>
+          <div v-for="(choice, index) in question.choices">
+            <q-radio name="answer" v-model="question.answer" :val="index" :label="choice" />
+          </div>
+        </div>
+      </q-list>
     </q-card>
-  </q-card>
+    <!-- <div class="column items-center q-my-xl">
+      <q-btn label="Сохранить результат" type="submit" color="primary" size="lg"/>
+    </div> -->
+  </q-form>  
 </template>
 
 <script>
-import { useQuasar, Loading } from 'quasar'
+import { useQuasar } from 'quasar'
 import { ref } from 'vue'
-import { getImageUrlById } from 'src/services/imageService'
+import { setQuestionImageUrl } from 'src/services/imageService'
 
 
 export default {
   name: 'Survey',
   props: {
-    imageURL: String,
-    question: String,
-    choices: Array,
-    surveyId: Number,
+    surveyData: Object,
   },
   setup(props, context) {
-    const submitResult = ref([])
-    const answer = ref(null)
-    const imageURL = ref('')
-    console.log(props.surveyId)
-    const surveyId = props.surveyId
-    Loading.show()
-    getImageUrlById(surveyId)
-    .then((response) => {
-      if (response.data) {
-        const url = response.data.signedUrl
-        imageURL.value = url
+    const surveyData = ref(null)
+    surveyData.value = props.surveyData
+    const $q = useQuasar()
+    // const answer = ref(null)
+
+    for (let question of surveyData.value) {
+      question.isLoading = true
+      console.log(question.isLoading)
+      question.imageUrl = ref('')
+      question.answer = ref(null)
+      setQuestionImageUrl(question, question.questionId)
+    }
+    // const imageURL = ref('')
+    // const surveyId = props.surveyId
+    
+    // Loading.show()
+    function checkAnswers() {
+      for (let question of surveyData.value) {
+        console.log(question.answer)
+        if (!question.answer && question.answer !== 0) {
+          return false
+        }
       }
-      Loading.hide()
+      return true
+    }
+
+    window.Telegram.WebApp.onEvent('mainButtonClicked', async function() {
+      if (!checkAnswers()) {
+        $q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: 'Необходимо выбрать все варианты ответа'
+        })
+      }
+      else {
+        
+        $q.notify({
+          color: 'green-5',
+          icon: 'check',
+          message: 'Ответ принят',
+          textColor: 'white',
+        })
+        console.log(surveyData.value)
+        const response = {}
+        for (let question of surveyData.value) {
+          response[question.questionId] = question.answer
+        }
+        console.log(response)
+        // response.answer = answer.value
+        window.Telegram.WebApp.sendData(JSON.stringify(response))
+        // context.emit('answersSelected', response)
+      }
     })
 
-    const $q = useQuasar()
     return {
-      answer,
-      submitResult,
-      imageURL,
-      onSubmit() {
-        if (!answer.value && answer.value != 0) {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'warning',
-            message: 'Необходимо выбрать один вариант ответа'
-          })
-        }
-        else {
-          $q.notify({
-            color: 'green-5',
-            textColor: 'white',
-            icon: 'check',
-            message: 'Ответ принят'
-          })
-          const response = {}
-          response.answer = answer.value
-          context.emit('answerSelected', response)
-        }
-      },
+      surveyData,
+      checkAnswers,
     }
   },
   
 }
 </script>
+<style scoped>
+.survey-card {
+  max-width: 100vw;
+  width: 500px;
+}
+.unvisible {
+  visibility: hidden;
+}
+</style>
