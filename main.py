@@ -142,8 +142,20 @@ class AdminPanel(StatesGroup):
 
 class EventMakerPanel(StatesGroup):
     menu = State()
-    add = State()
-    delete = State()
+    taskmenu = State()
+    taskmenu_namewait = State()
+    taskmenu_descriptionwait = State()
+    taskmenu_photowait = State()
+    taskmenu_collection_counterwait = State()
+    taskmenu_collection_surveywebapp = State()
+    taskmenu_collection_list = State()
+    taskmenu_collection_delete_select = State()
+    taskmenu_collection_delete_confirm = State()
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Event maker panel
+#-----------------------------------------------------------------------------------------------------------------------
+
 
 @dp.message_handler(commands=['event'], state='*')
 async def event_command(message: types.Message, state: FSMContext):
@@ -160,6 +172,183 @@ async def event_command(message: types.Message, state: FSMContext):
     users.set(user)
     await message.reply("Вы вошли в панель event maker`a!", reply_markup=usermakerkbm)
 
+@dp.message_handler(text="📝Создать задание", state=EventMakerPanel.menu)
+async def go_event_menu(message: types.Message, state: FSMContext):
+    await EventMakerPanel.taskmenu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(EventMakerPanel.taskmenu)
+    users.set(user)
+    await message.reply("Вы вошли в панель создания заданий.", reply_markup=eventtasks)
+
+
+
+@dp.message_handler(text='Удалить коллекцию', state=EventMakerPanel.taskmenu)
+async def del_coll(message: types.Message, state: FSMContext):
+    await message.reply("Введите пожалуйста имя коллекции для её удаления", reply_markup=types.ReplyKeyboardRemove())
+    await EventMakerPanel.taskmenu_collection_delete_select.set()
+
+
+@dp.message_handler(state=EventMakerPanel.taskmenu_collection_delete_select)
+async def delete_survey_handler(message: types.Message, state: FSMContext):
+    codee = message.text
+    deleted = supabase.table('TaskCollection').delete().match({'name': codee}).execute()
+
+    if not deleted.data:
+        # ничего не удалено
+        await message.reply("Такой коллекции нет", reply_markup=eventtasks)
+        await state.finish()
+        await EventMakerPanel.taskmenu.set()
+        return
+
+    # удаление прошло успешно
+    codee_code = code(codee)
+    await message.reply(f"Коллекция {codee_code} удалена", reply_markup=eventtasks, parse_mode='MarkdownV2')
+    await EventMakerPanel.taskmenu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(EventMakerPanel)
+
+
+@dp.message_handler(text='Список коллекций', state=EventMakerPanel)
+async def del_coll(message: types.Message, state: FSMContext):
+    await EventMakerPanel.taskmenu_collection_list.set()
+    chat_id = message.chat.id
+    user = users.get(message.chat.id)
+    user.user_state = str(EventMakerPanel.taskmenu_collection_list)
+
+    promos = supabase.table('TaskCollection').select('name', 'url').filter('name', 'gt', 0).order('name',
+                                                                                                  desc=True).execute()
+
+    promo_text = "📝 Действующие формы опросов:\n\n"
+
+    for promo in promos.data:
+        name = promo['name']
+        url = promo['url']
+
+        name_parsed = f'<code>{name}</code>'
+        url_parsed = f'<a href="{url}">Ссылка</a>'
+        promo_text += (name_parsed + f" {url_parsed} \n")
+
+    await bot.send_message(chat_id, promo_text, parse_mode=types.ParseMode.HTML, reply_markup=eventtasks,
+                           disable_web_page_preview=True)
+    await state.finish()
+    await EventMakerPanel.taskmenu.set()
+    user.user_state = str(EventMakerPanel.taskmenu)
+
+
+@dp.message_handler(text="Создать коллекцию", state=EventMakerPanel.taskmenu)
+async def admin_make(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    await bot.send_message(chat_id, f"Введите название коллекции заданий:", reply_markup=types.ReplyKeyboardRemove())
+    await EventMakerPanel.taskmenu_namewait.set()
+
+
+@dp.message_handler(state=EventMakerPanel.taskmenu_namewait)
+async def admin_taskmenu_namewait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    name = message.text
+    await bot.send_message(chat_id, "Введите описание коллекции заданий:")
+    await state.update_data(name=name)
+    await EventMakerPanel.taskmenu_descriptionwait.set()
+
+
+@dp.message_handler(state=EventMakerPanel.taskmenu_descriptionwait)
+async def admin_taskmenu_descriptionwait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    description = message.text
+    await bot.send_message(chat_id, "Отправте фотографию мероприятия:")
+    await state.update_data(description=description)
+    await EventMakerPanel.taskmenu_photowait.set()
+
+
+@dp.message_handler(content_types=types.ContentType.PHOTO, state=EventMakerPanel.taskmenu_photowait)
+async def admin_taskmenu_photowait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    photo = message
+    try:
+        await state.update_data(photo=photo.photo[2].file_id)
+        await bot.send_message(chat_id, "Введите количество вопросов в коллекции:")
+        await EventMakerPanel.taskmenu_collection_counterwait.set()
+    except Exception as e:
+        await bot.send_message(chat_id, "Произошла ошибка, отправьте пожалуйста фотографию в хорошем качестве.")
+        await EventMakerPanel.taskmenu_photowait.set()
+
+
+@dp.message_handler(state=EventMakerPanel.taskmenu_collection_counterwait)
+async def admin_taskmenu_collection_counterwait(message: types.Message, state: FSMContext):
+    chat_id = message.chat.id
+    try:
+        counter = int(message.text)
+    except ValueError:
+        await bot.send_message(chat_id, "Введенное значение должно быть числом > 0")
+        await EventMakerPanel.taskmenu_collection_counterwait.set()
+    if counter <= 0:
+        await bot.send_message(chat_id, "Введенное значение должно быть числом > 0")
+        await EventMakerPanel.taskmenu_collection_counterwait.set()
+    else:
+        await state.update_data(counter=counter)
+        await bot.send_message(chat_id, "Коллекция создана успешно! Перейдите пожалуйста, к составлению заданий!⬇️",
+                               reply_markup=surveywebapp)
+        await EventMakerPanel.taskmenu_collection_surveywebapp.set()
+
+
+@dp.message_handler(content_types=types.ContentType.WEB_APP_DATA, state=EventMakerPanel.taskmenu_collection_surveywebapp)
+async def survey_web_app(message: types.ContentType.WEB_APP_DATA, state: FSMContext):
+    chat_id = message.chat.id
+    data = await state.get_data()
+    counter = data.get("counter")
+    querylist = data.get("querylist")
+    numberPoints = data.get("numberPoints")
+    rightAnswers = data.get("rightAnswers")
+    if querylist == None:
+        querylist = []
+    if numberPoints == None:
+        numberPoints: dict = {}
+    if rightAnswers == None:
+        rightAnswers: dict = {}
+    url = 'https://survey-web-app.pages.dev/view?json='
+    message.text = message.web_app_data.data
+    data = json.loads(message.text)
+    data['questionId'] = await generate_id_for_survey(10)
+    new_json_data = json.dumps(data)
+    new_json_data = ast.literal_eval(new_json_data)
+    data = await state.get_data()
+    name = data.get("name")
+    numberPoints.update({new_json_data["questionId"]: new_json_data["numberPoints"]})  # numberPoints:correctAnswer
+    rightAnswers.update({new_json_data['questionId']: new_json_data['correctAnswer']})
+    await state.update_data(numberPoints=numberPoints)
+    await state.update_data(rightAnswers=rightAnswers)
+    querylist.append(new_json_data)
+    await state.update_data(querylist=querylist)
+    if counter > 1:
+        await bot.send_message(chat_id, "Пожалуйста, заполните следующий вопрос", reply_markup=surveywebapp)
+        await EventMakerPanel.taskmenu_collection_surveywebapp.set()
+        counter -= 1
+        await state.update_data(counter=counter)
+    else:
+        await EventMakerPanel.taskmenu.set()
+        await bot.send_message(chat_id, "Опрос успешно создан!", reply_markup=eventtasks)
+        querydict = {"surveyData": querylist}
+        querydict_dump: str = json.dumps(querydict)
+        url = url + querydict_dump
+        url = url.replace(' ', '%20')
+        url = url.replace('"', '%22')
+        data = await state.get_data()
+        name = data.get("name")
+        description = data.get("description")
+        photo = data.get("photo")
+        supabase.table('TaskCollection').insert(
+            {'name': name, 'description': description, 'photo': photo, 'counter': counter, 'url': url,
+             'numberPoints': numberPoints, 'rightAnswers': rightAnswers}).execute()
+
+@dp.message_handler(text='⬅️Назад в меню', state=EventMakerPanel.taskmenu)
+async def back_to_event_main_menu(message: types.Message, state: FSMContext):
+    await EventMakerPanel.menu.set()
+    user = users.get(message.chat.id)
+    user.user_state = str(EventMakerPanel.menu)
+    users.set(user)
+    await message.reply("Вы вышли из панели создания заданий", reply_markup=usermakerkbm)
+
+
 @dp.message_handler(text = "⬅️Меню", state=EventMakerPanel.menu)
 async def back_from_event(message: types.Message, state:FSMContext):
     await MenuStates.waiting_for_profile.set()
@@ -167,6 +356,12 @@ async def back_from_event(message: types.Message, state:FSMContext):
     user.user_state = str(MenuStates.waiting_for_profile)
     users.set(user)
     await message.reply("Вы вышли из панели event maker`a", reply_markup=rkbm)
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Event maker panel
+#-----------------------------------------------------------------------------------------------------------------------
+
 
 # Хендлер отмены действия через кнопку
 @dp.callback_query_handler(text="cancel", state=[AdminPanel.change_user_balance,AdminPanel.change_user_fullname,AdminPanel.change_user_agestart,AdminPanel.get_info_about_user])
@@ -798,7 +993,7 @@ async def delete_survey_handler(message: types.Message, state: FSMContext):
 
     # удаление прошло успешно
     codee_code = code(codee)
-    await message.reply(f"Промокод {codee_code} удален", reply_markup=admtasks, parse_mode='MarkdownV2')
+    await message.reply(f"Коллекция {codee_code} удалена", reply_markup=admtasks, parse_mode='MarkdownV2')
     await AdminPanel.taskmenu.set()
     user = users.get(message.chat.id)
     user.user_state = str(AdminPanel.taskmenu)
