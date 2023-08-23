@@ -8,11 +8,6 @@ CREATE TABLE "DataUsers" (
   "tgusr" varchar
 );
 
-CREATE TABLE "Pointer" (
-  "chat_id" int UNIQUE PRIMARY KEY,
-  "counter" int
-);
-
 CREATE TABLE "Report" (
   "tgusr" varchar UNIQUE PRIMARY KEY,
   "description" varchar
@@ -30,16 +25,35 @@ CREATE TABLE "UsedPromocode" (
   "chat_id" int
 );
 
-CREATE TABLE "AdminTasks" (
-  "counter" int PRIMARY KEY,
-  "name" varchar,
-  "description" varchar
+CREATE TABLE "Event" (
+  "id" int PRIMARY KEY,
+  "date_start" varchar,
+  "date_end" varchar,
+  "full_name" varchar
 );
 
-ALTER TABLE "DataUsers" ADD FOREIGN KEY ("chat_id") REFERENCES "Pointer" ("chat_id");
+CREATE TABLE "TaskCollection" (
+  "name" varchar UNIQUE PRIMARY KEY,
+  "description" varchar,
+  "photo" varchar,
+  "counter" int,
+  "url" varchar,
+  "numberPoints" varchar,
+  "rightAnswers" varchar
+);
+
+CREATE TABLE "Passd" (
+  "id" int PRIMARY KEY,
+  "name" varchar,
+  "chat_id" int
+);
 
 ALTER TABLE "DataUsers" ADD FOREIGN KEY ("chat_id") REFERENCES "UsedPromocode" ("chat_id");
 
+ALTER TABLE "DataUsers" ADD FOREIGN KEY ("tgusr") REFERENCES "Report" ("tgusr");
+
 ALTER TABLE "Promocode" ADD FOREIGN KEY ("promo") REFERENCES "UsedPromocode" ("promo");
 
-ALTER TABLE "AdminTasks" ADD FOREIGN KEY ("counter") REFERENCES "Pointer" ("counter");
+ALTER TABLE "TaskCollection" ADD FOREIGN KEY ("name") REFERENCES "Passd" ("name");
+
+ALTER TABLE "DataUsers" ADD FOREIGN KEY ("chat_id") REFERENCES "Passd" ("chat_id");
