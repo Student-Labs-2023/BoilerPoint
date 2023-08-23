@@ -184,7 +184,7 @@ admtasks.row(admdeletetask,admtasklist)
 admtasks.row(admtaskback)
 
 #survey web-app
-surveywebapp = InlineKeyboardMarkup(row_width=1)
-survquestcreate = InlineKeyboardButton(text="Создать вопрос",web_app=WebAppInfo(url = 'https://survey-web-app.pages.dev/edit?json=%7B%22surveyData%22%3A%20%5B%7B%22questionId%22%3A%2069%2C%20%22question%22%3A%20%22%22%2C%20%22choices%22%3A%20%5B%5D%7D%5D%7D'))
-surveywebapp.add(survquestcreate)
+surveywebapp = ReplyKeyboardMarkup(resize_keyboard=True)
+survquestcreate = KeyboardButton(text="Создать вопрос",web_app=WebAppInfo(url = 'https://survey-web-app.pages.dev/edit?json=%7B%22surveyData%22%3A%20%5B%7B%22questionId%22%3A%2069%2C%20%22question%22%3A%20%22%22%2C%20%22choices%22%3A%20%5B%5D%7D%5D%7D'))
+surveywebapp.row(survquestcreate)
 
