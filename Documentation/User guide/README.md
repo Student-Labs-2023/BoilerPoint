@@ -53,10 +53,9 @@
 
 ## Кнопка "Задания" 
 
-- Эта кнопка служит для просмотра заданий с ивентов 
+- Эта кнопка служит для просмотра заданий с ивентов , их прохождения и получение за это баллов 
 
-
-![image](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/c6f7d5c5-34b9-449b-a759-ca4b53488f56)
+![Telegram_oXvF2ifqSk](https://github.com/Student-Labs-2023/BoilerPoint/assets/39564937/8495f8e8-1ea9-4ad9-a139-22df356cb947)
 
 
 
